@@ -3,12 +3,14 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <fcntl.h>
 
 #include "rv_cpu.h"
 #include "rv_exceptions.h"
 #include "rv_memory.h"
 #include "rv_bits.h"
-#include "rv_syscalls.h"
+#include "newlib_syscalls.h"
+#include "newlib_trans.h"
 
 constexpr uint32_t kRiscvOpcodeMask = 0x7F;
 
@@ -843,29 +845,29 @@ void rv_cpu::handle_user_exception()
 
 // syscall dispatching
 
+struct  kernel_stat
+{
+    unsigned long long st_dev;
+    unsigned long long st_ino;
+    unsigned int st_mode;
+    unsigned int st_nlink;
+    unsigned int st_uid;
+    unsigned int st_gid;
+    unsigned long long st_rdev;
+    unsigned long long __pad1;
+    long long st_size;
+    int st_blksize;
+    int __pad2;
+    long long st_blocks;
+    struct timespec st_atim;
+    struct timespec st_mtim;
+    struct timespec st_ctim;
+    int __glibc_reserved[2];
+};
+
 // int fstat(int fd, struct stat *statbuf);
 rv_uint rv_cpu::syscall_fstat(rv_uint arg0, rv_uint arg1)
 {
-    struct  kernel_stat
-    {
-        unsigned long long st_dev;
-        unsigned long long st_ino;
-        unsigned int st_mode;
-        unsigned int st_nlink;
-        unsigned int st_uid;
-        unsigned int st_gid;
-        unsigned long long st_rdev;
-        unsigned long long __pad1;
-        long long st_size;
-        int st_blksize;
-        int __pad2;
-        long long st_blocks;
-        struct timespec st_atim;
-        struct timespec st_mtim;
-        struct timespec st_ctim;
-        int __glibc_reserved[2];
-    };
-
     struct stat st;
     if (fstat((int)arg0, &st) == -1) {
         return (rv_uint)-1;
@@ -891,12 +893,50 @@ rv_uint rv_cpu::syscall_fstat(rv_uint arg0, rv_uint arg1)
     return 0;
 }
 
+rv_uint rv_cpu::syscall_stat(rv_uint arg0, rv_uint arg1)
+{
+    const char *pathname = reinterpret_cast<const char *>(memory_.ram_ptr(arg0));
+    kernel_stat *kst = reinterpret_cast<kernel_stat*>(memory_.ram_ptr(arg1));
+    struct stat st;
+    if (stat(pathname, &st) == -1)
+        return (rv_uint)-1;
+
+    kst->st_dev = st.st_dev;
+    kst->st_ino = st.st_ino;
+    kst->st_mode = st.st_mode;
+    kst->st_nlink = (unsigned int)st.st_nlink;
+    kst->st_uid = st.st_uid;
+    kst->st_gid = st.st_gid;
+    kst->st_rdev = st.st_rdev;
+    kst->st_size = st.st_size;
+    kst->st_blksize = (int)st.st_blksize;
+    kst->st_blocks = st.st_blocks;
+    kst->st_atim.tv_sec = st.st_atim.tv_sec;
+    kst->st_atim.tv_nsec = st.st_atim.tv_nsec;
+    kst->st_mtim.tv_sec = st.st_mtim.tv_sec;
+    kst->st_mtim.tv_nsec = st.st_mtim.tv_nsec;
+    kst->st_ctim.tv_sec = st.st_ctim.tv_sec;
+    kst->st_ctim.tv_nsec = st.st_ctim.tv_nsec;
+    return 0;
+}
+
+
 // int brk(void *addr);
 rv_uint rv_cpu::syscall_brk(rv_uint arg0)
 {
     if (arg0 == 0)
         return memory_.brk();
-    return memory_.set_brk(arg0) ? 0 : (rv_uint)-1;
+    return memory_.set_brk(arg0) ? memory_.brk() : (rv_uint)-1;
+}
+
+rv_uint rv_cpu::syscall_open(rv_uint arg0, rv_uint arg1, rv_uint arg2)
+{
+    const char *pathname = reinterpret_cast<const char *>(memory_.ram_ptr(arg0));
+    int flags = (int)arg1;
+    int mode = (int)arg2;
+
+    // translate newlib flags to system flags
+    return (rv_uint)open(pathname, newlib_translate_open_flags(flags), mode);
 }
 
 // ssize_t write(int fd, const void *buf, size_t count);
@@ -907,6 +947,15 @@ rv_uint rv_cpu::syscall_write(rv_uint arg0, rv_uint arg1, rv_uint arg2)
     int fd = (int)arg0;
     return (rv_uint)write(fd, buf, count);
 
+}
+
+// ssize_t read(int fd, void *buf, size_t count);
+rv_uint rv_cpu::syscall_read(rv_uint arg0, rv_uint arg1, rv_uint arg2)
+{
+    void *buf = memory_.ram_ptr(arg1);
+    size_t count = (size_t)arg2;
+    int fd = (int)arg0;
+    return (rv_uint)read(fd, buf, count);
 }
 
 // int close(int fd)
@@ -937,13 +986,30 @@ void rv_cpu::dispatch_syscall(rv_uint syscall_no,
     rv_uint arg5
 )
 {
+#ifdef DEBUG_SYSCALLS
+    fprintf(stderr, "[d] syscall %d, 0x%08x, 0x%08x, 0x%08x, 0x%08x, 0x%08x, 0x%08x\n", syscall_no, arg0, arg1,
+        arg2, arg3, arg4, arg5);
+#endif
+
     switch (syscall_no) {
     case SYS_fstat:
         regs_[a0] = syscall_fstat(arg0, arg1);
         break;
 
+    case SYS_stat:
+        regs_[a0] = syscall_stat(arg0, arg1);
+        break;
+
     case SYS_brk:
         regs_[a0] = syscall_brk(arg0);
+        break;
+
+    case SYS_open:
+        regs_[a0] = syscall_open(arg0, arg1, arg2);
+        break;
+
+    case SYS_read:
+        regs_[a0] = syscall_read(arg0, arg1, arg2);
         break;
 
     case SYS_write:

@@ -72,8 +72,11 @@ private:
 
     // syscalls emulation
     rv_uint syscall_fstat(rv_uint arg0, rv_uint arg1);
+    rv_uint syscall_stat(rv_uint arg0, rv_uint arg1);
     rv_uint syscall_brk(rv_uint arg0);
+    rv_uint syscall_open(rv_uint arg0, rv_uint arg1, rv_uint arg2);
     rv_uint syscall_write(rv_uint arg0, rv_uint arg1, rv_uint arg2);
+    rv_uint syscall_read(rv_uint arg0, rv_uint arg1, rv_uint arg2);
     rv_uint syscall_close(rv_uint arg0);
     rv_uint syscall_exit(rv_uint arg0);
 
