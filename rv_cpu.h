@@ -78,7 +78,10 @@ private:
     rv_uint syscall_write(rv_uint arg0, rv_uint arg1, rv_uint arg2);
     rv_uint syscall_read(rv_uint arg0, rv_uint arg1, rv_uint arg2);
     rv_uint syscall_close(rv_uint arg0);
+    rv_uint syscall_lseek(rv_uint arg0, rv_uint arg1, rv_uint arg2);
     rv_uint syscall_exit(rv_uint arg0);
+    rv_uint syscall_openat(rv_uint arg0, rv_uint arg1, rv_uint arg2, rv_uint arg3);
+    rv_uint syscall_gettimeofday(rv_uint arg0, rv_uint arg1);
 
 private:
     rv_uint pc_;

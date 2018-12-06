@@ -2,6 +2,7 @@
 #include <limits>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/time.h>
 #include <unistd.h>
 #include <fcntl.h>
 
@@ -845,78 +846,31 @@ void rv_cpu::handle_user_exception()
 
 // syscall dispatching
 
-struct  kernel_stat
-{
-    unsigned long long st_dev;
-    unsigned long long st_ino;
-    unsigned int st_mode;
-    unsigned int st_nlink;
-    unsigned int st_uid;
-    unsigned int st_gid;
-    unsigned long long st_rdev;
-    unsigned long long __pad1;
-    long long st_size;
-    int st_blksize;
-    int __pad2;
-    long long st_blocks;
-    struct timespec st_atim;
-    struct timespec st_mtim;
-    struct timespec st_ctim;
-    int __glibc_reserved[2];
-};
-
 // int fstat(int fd, struct stat *statbuf);
 rv_uint rv_cpu::syscall_fstat(rv_uint arg0, rv_uint arg1)
 {
     struct stat st;
-    if (fstat((int)arg0, &st) == -1) {
-        return (rv_uint)-1;
+    if (fstat((int)arg0, arg1 != 0 ? &st : nullptr) == -1) {
+        return (rv_uint)(-errno);
     }
 
-    kernel_stat *kst = reinterpret_cast<kernel_stat *>(memory_.ram_ptr(arg1));
-    kst->st_dev = st.st_dev;
-    kst->st_ino = st.st_ino;
-    kst->st_mode = st.st_mode;
-    kst->st_nlink = (unsigned int)st.st_nlink;
-    kst->st_uid = st.st_uid;
-    kst->st_gid = st.st_gid;
-    kst->st_rdev = st.st_rdev;
-    kst->st_size = st.st_size;
-    kst->st_blksize = (int)st.st_blksize;
-    kst->st_blocks = st.st_blocks;
-    kst->st_atim.tv_sec = st.st_atim.tv_sec;
-    kst->st_atim.tv_nsec = st.st_atim.tv_nsec;
-    kst->st_mtim.tv_sec = st.st_mtim.tv_sec;
-    kst->st_mtim.tv_nsec = st.st_mtim.tv_nsec;
-    kst->st_ctim.tv_sec = st.st_ctim.tv_sec;
-    kst->st_ctim.tv_nsec = st.st_ctim.tv_nsec;
+    if (arg1 != 0) {
+        newlib_stat *nst = reinterpret_cast<newlib_stat *>(memory_.ram_ptr(arg1));
+        newlib_translate_stat(nst, &st);
+    }
     return 0;
 }
 
 rv_uint rv_cpu::syscall_stat(rv_uint arg0, rv_uint arg1)
 {
-    const char *pathname = reinterpret_cast<const char *>(memory_.ram_ptr(arg0));
-    kernel_stat *kst = reinterpret_cast<kernel_stat*>(memory_.ram_ptr(arg1));
+    const char *pathname = arg0 != 0 ? reinterpret_cast<const char *>(memory_.ram_ptr(arg0)) : nullptr;
+    newlib_stat *nst = reinterpret_cast<newlib_stat*>(memory_.ram_ptr(arg1));
     struct stat st;
-    if (stat(pathname, &st) == -1)
-        return (rv_uint)-1;
-
-    kst->st_dev = st.st_dev;
-    kst->st_ino = st.st_ino;
-    kst->st_mode = st.st_mode;
-    kst->st_nlink = (unsigned int)st.st_nlink;
-    kst->st_uid = st.st_uid;
-    kst->st_gid = st.st_gid;
-    kst->st_rdev = st.st_rdev;
-    kst->st_size = st.st_size;
-    kst->st_blksize = (int)st.st_blksize;
-    kst->st_blocks = st.st_blocks;
-    kst->st_atim.tv_sec = st.st_atim.tv_sec;
-    kst->st_atim.tv_nsec = st.st_atim.tv_nsec;
-    kst->st_mtim.tv_sec = st.st_mtim.tv_sec;
-    kst->st_mtim.tv_nsec = st.st_mtim.tv_nsec;
-    kst->st_ctim.tv_sec = st.st_ctim.tv_sec;
-    kst->st_ctim.tv_nsec = st.st_ctim.tv_nsec;
+    if (stat(pathname, arg1 != 0 ? &st : nullptr) == -1)
+        return (rv_uint)(-errno);
+    if (arg1 != 0) {
+        newlib_translate_stat(nst, &st);
+    }
     return 0;
 }
 
@@ -926,36 +880,34 @@ rv_uint rv_cpu::syscall_brk(rv_uint arg0)
 {
     if (arg0 == 0)
         return memory_.brk();
-    return memory_.set_brk(arg0) ? memory_.brk() : (rv_uint)-1;
+    return memory_.set_brk(arg0) ? memory_.brk() : (rv_uint)(-ENOMEM);
 }
 
 rv_uint rv_cpu::syscall_open(rv_uint arg0, rv_uint arg1, rv_uint arg2)
 {
-    const char *pathname = reinterpret_cast<const char *>(memory_.ram_ptr(arg0));
+    const char *pathname = arg0 != 0 ? reinterpret_cast<const char *>(memory_.ram_ptr(arg0)) : nullptr;
     int flags = (int)arg1;
     int mode = (int)arg2;
 
-    // translate newlib flags to system flags
-    return (rv_uint)open(pathname, newlib_translate_open_flags(flags), mode);
+    return open(pathname, newlib_translate_open_flags(flags), mode) != -1 ? 0 : (rv_uint)(-errno);
 }
 
 // ssize_t write(int fd, const void *buf, size_t count);
 rv_uint rv_cpu::syscall_write(rv_uint arg0, rv_uint arg1, rv_uint arg2)
 {
-    const void *buf = memory_.ram_ptr(arg1);
+    const void *buf = arg1 != 0 ? memory_.ram_ptr(arg1) : nullptr;
     size_t count = (size_t)arg2;
     int fd = (int)arg0;
-    return (rv_uint)write(fd, buf, count);
-
+    return write(fd, buf, count) != -1 ? 0 : (rv_uint)(-errno);
 }
 
 // ssize_t read(int fd, void *buf, size_t count);
 rv_uint rv_cpu::syscall_read(rv_uint arg0, rv_uint arg1, rv_uint arg2)
 {
-    void *buf = memory_.ram_ptr(arg1);
+    void *buf = arg1 != 0 ? memory_.ram_ptr(arg1) : nullptr;
     size_t count = (size_t)arg2;
     int fd = (int)arg0;
-    return (rv_uint)read(fd, buf, count);
+    return read(fd, buf, count) != -1 ? 0 : (rv_uint)(-errno);
 }
 
 // int close(int fd)
@@ -965,7 +917,7 @@ rv_uint rv_cpu::syscall_close(rv_uint arg0)
 
     // we don't want to close our own stdin, stderrr and stdout :)
     if (fd != 0 && fd != 1 && fd != 2)
-        return close(fd);
+        return close(fd) != -1 ? 0 : (rv_uint)(-errno);
     return 0;
 }
 
@@ -975,6 +927,35 @@ rv_uint rv_cpu::syscall_exit(rv_uint arg0)
     emulation_exit_ = true;
     emulation_exit_status_ = (int)arg0;
     return 0;
+}
+
+rv_uint rv_cpu::syscall_lseek(rv_uint arg0, rv_uint arg1, rv_uint arg2)
+{
+    int fd = (int)arg0;
+    off_t where = (off_t)arg1;
+    int whence = (int)arg2;
+    return lseek(fd, where, whence) != -1 ? 0 : (rv_uint)(-errno);
+}
+
+rv_uint rv_cpu::syscall_openat(rv_uint arg0, rv_uint arg1, rv_uint arg2, rv_uint arg3)
+{
+    int dirfd = (int)arg0;
+    const char *pathname = arg1 != 0 ? reinterpret_cast<const char *>(memory_.ram_ptr(arg1)) : nullptr;
+    int flags = (int)arg2;
+    int mode = (int)arg3;
+
+    return openat(dirfd, pathname, flags, mode) != -1 ? 0 : (rv_uint)(-errno);
+}
+
+rv_uint rv_cpu::syscall_gettimeofday(rv_uint arg0, rv_uint arg1)
+{
+    struct newlib_timeval *ntv = reinterpret_cast<struct newlib_timeval*>(memory_.ram_ptr(arg0));
+    struct timezone *tz = reinterpret_cast<struct timezone*>(memory_.ram_ptr(arg1));
+    struct timeval tv;
+    int res = gettimeofday(arg0 != 0 ? &tv : nullptr, arg1 != 0 ? tz : nullptr);
+    if (res != -1 && arg0 != 0)
+        newlib_translate_timeval(ntv, &tv);
+    return res != -1 ? 0 : (rv_uint)(-errno);
 }
 
 void rv_cpu::dispatch_syscall(rv_uint syscall_no,
@@ -1016,12 +997,23 @@ void rv_cpu::dispatch_syscall(rv_uint syscall_no,
         regs_[a0] = syscall_write(arg0, arg1, arg2);
         break;
 
+    case SYS_lseek:
+        regs_[a0] = syscall_lseek(arg0, arg1, arg2);
+        break;
+
     case SYS_close:
         regs_[a0] = syscall_close(arg0);
         break;
 
     case SYS_exit:
         regs_[a0] = syscall_exit(arg0);
+
+    case SYS_openat:
+        regs_[a0] = syscall_openat(arg0, arg1, arg2, arg3);
+        break;
+
+    case SYS_gettimeofday:
+        regs_[a0] = syscall_gettimeofday(arg0, arg1);
         break;
     }
 }

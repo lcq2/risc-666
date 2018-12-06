@@ -2,6 +2,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include "newlib_trans.h"
 
 int newlib_translate_open_flags(int newlib_flags)
 {
@@ -56,4 +57,30 @@ int newlib_translate_open_flags(int newlib_flags)
     if (newlib_flags & NEWLIB_O_NOCTTY)
         flags |= O_NOCTTY;
     return flags;
+}
+
+void newlib_translate_stat(newlib_stat *dst, struct stat *src)
+{
+    dst->st_dev = src->st_dev;
+    dst->st_ino = src->st_ino;
+    dst->st_mode = src->st_mode;
+    dst->st_nlink = (unsigned int)src->st_nlink;
+    dst->st_uid = src->st_uid;
+    dst->st_gid = src->st_gid;
+    dst->st_rdev = src->st_rdev;
+    dst->st_size = src->st_size;
+    dst->st_blksize = (int)src->st_blksize;
+    dst->st_blocks = src->st_blocks;
+    dst->st_atim.tv_sec = (uint32_t)src->st_atim.tv_sec;
+    dst->st_atim.tv_nsec = (uint32_t)src->st_atim.tv_nsec;
+    dst->st_mtim.tv_sec = (uint32_t)src->st_mtim.tv_sec;
+    dst->st_mtim.tv_nsec = (uint32_t)src->st_mtim.tv_nsec;
+    dst->st_ctim.tv_sec = (uint32_t)src->st_ctim.tv_sec;
+    dst->st_ctim.tv_nsec = (uint32_t)src->st_ctim.tv_nsec;
+}
+
+void newlib_translate_timeval(newlib_timeval *dst, struct timeval *src)
+{
+    dst->tv_sec = (uint32_t)src->tv_sec;
+    dst->tv_usec = (uint32_t)src->tv_usec;
 }
