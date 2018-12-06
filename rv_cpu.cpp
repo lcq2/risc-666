@@ -148,10 +148,8 @@ void rv_cpu::reset(rv_uint pc)
     // execution starts at 0x1000 in user mode
     pc_ = pc;
 
-    regs_.fill(0x66666666);
-
-    // x0 always returns 0
-    regs_[0] = 0;
+    // initialize all registers to 0
+    regs_.fill(0);
 
     cycle_ = 0;
     instret_ = 0;
@@ -838,10 +836,34 @@ void rv_cpu::handle_user_exception()
     case rv_exception::ecall_from_umode:
         dispatch_syscall(regs_[a7], regs_[a0], regs_[a1], regs_[a2], regs_[a3], regs_[a4], regs_[a5]);
         break;
+    case rv_exception ::illegal_instruction:
+        handle_illegal_instruction();
+        break;
     }
 
     exception_raised_ = false;
     pc_ = pc_+4;
+}
+
+void rv_cpu::dump_regs()
+{
+    fprintf(stderr, "\t");
+    for (size_t i = 0; i < 32; i += 8) {
+        for (size_t j = 0; j < 8; ++j) {
+            fprintf(stderr, "x%d: 0x%08x\t", i+j, regs_[i+j]);
+        }
+        fprintf(stderr, "\n\t");
+    }
+    fprintf(stderr, "\n");
+    fflush(stderr);
+}
+
+void rv_cpu::handle_illegal_instruction()
+{
+    fprintf(stderr, "[e] error: illegal_instruction at %08x\n", pc_);
+    dump_regs();
+    emulation_exit_ = true;
+    emulation_exit_status_ = 255;
 }
 
 // syscall dispatching

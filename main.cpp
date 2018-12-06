@@ -50,9 +50,9 @@ int main(int argc, char *argv[])
         for (size_t i = 0, e = loader.num_segments(); i < e; ++i) {
             memory.map_region(loader.segment_vaddress(i), loader.segment_data(i), loader.segment_psize(i), 0);
             last_vaddr = loader.segment_vaddress(i);
+            last_vsize = loader.segment_vsize(i);
         }
-        while (last_vsize % 0x1000)
-            last_vsize += 1;
+        last_vsize = last_vsize + (0x1000 - (last_vsize%0x1000));
 
         memory.prepare_environment(argc, argv, optind);
         memory.set_brk(last_vaddr + last_vsize);

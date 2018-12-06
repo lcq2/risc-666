@@ -60,7 +60,10 @@ private:
     bool csr_rw(uint32_t csr, uint32_t rd, rv_uint new_value, uint32_t csrop);
     void execute_mret();
 
+    void dump_regs();
+
     void handle_user_exception();
+    void handle_illegal_instruction();
     void dispatch_syscall(rv_uint syscall_no,
         rv_uint arg0,
         rv_uint arg1,
