@@ -1047,6 +1047,7 @@ void rv_cpu::dispatch_syscall(rv_uint syscall_no,
 
     case SYS_exit:
         regs_[a0] = syscall_exit(arg0);
+        break;
 
     case SYS_openat:
         regs_[a0] = syscall_openat(arg0, arg1, arg2, arg3);
