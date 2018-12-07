@@ -50,12 +50,11 @@ boolean		grabMouse;
 //  Translates the key 
 //
 
-int xlatekey(void *key)
+int xlatekey(struct av_key *key)
 {
-/*
     int rc;
 
-    switch(key->sym)
+    switch(key->vk_code)
     {
       case SDLK_LEFT:	rc = KEY_LEFTARROW;	break;
       case SDLK_RIGHT:	rc = KEY_RIGHTARROW;	break;
@@ -98,24 +97,22 @@ int xlatekey(void *key)
 	break;
 	
       case SDLK_LALT:
-      case SDLK_LMETA:
+//      case SDLK_LMETA:
       case SDLK_RALT:
-      case SDLK_RMETA:
+      //case SDLK_RMETA:
 	rc = KEY_RALT;
 	break;
 	
       default:
-        rc = key->sym;
+        rc = key->vk_code;
 	break;
     }
 
     return rc;
-*/
 }
 
 void I_ShutdownGraphics(void)
 {
-//  SDL_Quit();
     av_shutdown();
 }
 
@@ -131,25 +128,28 @@ void I_StartFrame (void)
 }
 
 /* This processes SDL events */
-void I_GetEvent(void *Event)
-{/*
-    Uint8 buttonstate;
+void I_GetEvent(struct av_event *evt)
+{
+    uint8_t buttonstate;
+    struct av_event_keyboard *keyevt;
     event_t event;
 
-    switch (Event->type)
+    switch (evt->event_type)
     {
-      case SDL_KEYDOWN:
+      case AV_event_keydown:
+      keyevt = (struct av_event_keyboard *)evt;
 	event.type = ev_keydown;
-	event.data1 = xlatekey(&Event->key.keysym);
+	event.data1 = xlatekey(&keyevt->key);
 	D_PostEvent(&event);
         break;
 
-      case SDL_KEYUP:
+      case AV_event_keyup:
+        keyevt = (struct av_event_keyboard *)evt;
 	event.type = ev_keyup;
-	event.data1 = xlatekey(&Event->key.keysym);
+	event.data1 = xlatekey(&keyevt->key);
 	D_PostEvent(&event);
 	break;
-
+/*
       case SDL_MOUSEBUTTONDOWN:
       case SDL_MOUSEBUTTONUP:
 	buttonstate = SDL_GetMouseState(NULL, NULL);
@@ -183,9 +183,9 @@ void I_GetEvent(void *Event)
 // 	break;
 // #endif
 
-//       case SDL_QUIT:
-// 	I_Quit();
-//     }
+       case AV_event_quit:
+ 	I_Quit();
+     }
 
 }
 
@@ -198,7 +198,11 @@ void I_StartTic (void)
 
     while ( SDL_PollEvent(&Event) )
 	I_GetEvent(&Event);*/
-    av_poll_event();
+//    av_poll_event();
+    char buf[AV_EVENT_BUF_SIZE] = {0};
+    struct av_event *evt = (struct av_event *)&buf[0];
+    while (av_poll_event(evt))
+        I_GetEvent(evt);
 }
 
 

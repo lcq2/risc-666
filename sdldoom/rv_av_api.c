@@ -57,9 +57,9 @@ int av_set_palette(uint32_t *palette, int ncolors)
 	return syscall_errno(SYS_av_set_palette, palette, ncolors, 0, 0, 0, 0);
 }
 
-int av_poll_event()
+int av_poll_event(struct av_event *evt)
 {
-  return syscall_errno(SYS_av_poll_event, 0, 0, 0, 0, 0, 0);
+  return syscall_errno(SYS_av_poll_event, evt, 0, 0, 0, 0, 0);
 }
 
 uint32_t av_get_ticks()

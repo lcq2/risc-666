@@ -15,6 +15,7 @@ rv_uint rv_sdl::syscall_init(rv_uint arg0, rv_uint arg1)
     if (retval < 0)
         return (rv_uint)retval;
 
+    SDL_SetWindowTitle(main_window_, "RISC-666");
     main_surface_ = SDL_CreateRGBSurface(0, width_, height_, 32, 0, 0, 0, 0);
     screen_surface_ = SDL_CreateRGBSurface(0, width_, height_, 8, 0, 0, 0, 0);
     main_texture_ = SDL_CreateTexture(main_renderer_, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, width_, height_);
@@ -44,12 +45,15 @@ rv_uint rv_sdl::syscall_update(rv_uint arg0)
 
     const uint8_t* bits = reinterpret_cast<const uint8_t*>(memory_.ram_ptr(arg0));
     if (SDL_MUSTLOCK(screen_surface_)) {
-        SDL_LockSurface(screen_surface_);
+        if (SDL_LockSurface(screen_surface_) < 0) {
+            fprintf(stderr, "[e] error: SDL_LockSurface() failed with %s\n", SDL_GetError());
+            return (rv_uint)-1;
+        }
     }
     memcpy(screen_surface_->pixels, bits, width_*height_);
-    if (SDL_MUSTLOCK(screen_surface_)) {
+    if (SDL_MUSTLOCK(screen_surface_))
         SDL_UnlockSurface(screen_surface_);
-    }
+
     if (SDL_BlitSurface(screen_surface_, nullptr, main_surface_, nullptr) < 0) {
         fprintf(stderr, "[e] error: SDL_BlitSurface() failed with %s\n", SDL_GetError());
         return (rv_uint)-1;
@@ -58,22 +62,53 @@ rv_uint rv_sdl::syscall_update(rv_uint arg0)
         fprintf(stderr, "[e] error: SDL_UpdateTexture() failed with %s\n", SDL_GetError());
         return (rv_uint)-1;
     }
-    SDL_RenderClear(main_renderer_);
-    SDL_RenderCopy(main_renderer_, main_texture_, nullptr, nullptr);
+    if (SDL_RenderClear(main_renderer_) < 0) {
+        fprintf(stderr, "[e] error: SDL_RenderClear() failed with %s\n", SDL_GetError());
+        return (rv_uint)-1;
+    }
+    if (SDL_RenderCopy(main_renderer_, main_texture_, nullptr, nullptr) < 0) {
+        fprintf(stderr, "[e] error: SDL_RenderCopy() failed with %s\n", SDL_GetError());
+        return (rv_uint)-1;
+    }
     SDL_RenderPresent(main_renderer_);
 
     return 0;
 }
 
-rv_uint rv_sdl::syscall_poll_event()
+rv_uint rv_sdl::syscall_poll_event(rv_uint arg0)
 {
-    SDL_Event event;
-    while(SDL_PollEvent(&event))
-    {
+    if (arg0 == 0)
+        return (rv_uint)-1;
 
+    SDL_Event event;
+    if(SDL_PollEvent(&event)) {
+        switch (event.type) {
+        case SDL_KEYDOWN:
+        case SDL_KEYUP: {
+            av_event_keyboard *keyevt = reinterpret_cast<av_event_keyboard *>(memory_.ram_ptr(arg0));
+            if (event.type == SDL_KEYDOWN)
+                keyevt->hdr.event_type = AV_event_keydown;
+            else if (event.type == SDL_KEYUP)
+                keyevt->hdr.event_type = AV_event_keyup;
+            keyevt->key.scan_code = event.key.keysym.scancode;
+            keyevt->key.vk_code = event.key.keysym.sym;
+            keyevt->hdr.timestamp = SDL_GetTicks();
+        }
+            break;
+
+        case SDL_QUIT: {
+            av_event *evt = reinterpret_cast<av_event *>(memory_.ram_ptr(arg0));
+            evt->event_type = AV_event_quit;
+            evt->timestamp = SDL_GetTicks();
+        }
+            break;
+        }
+        return 1;
     }
+
     return 0;
 }
+
 rv_uint rv_sdl::syscall_delay(rv_uint arg0)
 {
     SDL_Delay(arg0);

@@ -1077,7 +1077,7 @@ void rv_cpu::dispatch_syscall(rv_uint syscall_no,
         break;
 
     case SYS_av_poll_event:
-        regs_[a0] = sdl_.syscall_poll_event();
+        regs_[a0] = sdl_.syscall_poll_event(arg0);
         break;
 
     case SYS_av_shutdown:
