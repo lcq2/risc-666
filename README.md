@@ -1,4 +1,4 @@
-# RISC-666
+# ⛧RISC-666⛧
 A RISC-V user-mode emulator that runs DooM
 
 ![DooM Menu 1](https://github.com/lcq2/lcq2.github.io/blob/master/risc_666/risc_666_1.png?raw=true "Shareware screen 1")
