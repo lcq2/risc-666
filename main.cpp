@@ -48,6 +48,7 @@ int main(int argc, char *argv[])
         rv_uint last_vaddr = 0;
         rv_uint last_vsize = 0;
         for (size_t i = 0, e = loader.num_segments(); i < e; ++i) {
+
             memory.map_region(loader.segment_vaddress(i), loader.segment_data(i), loader.segment_psize(i), 0);
             last_vaddr = loader.segment_vaddress(i);
             last_vsize = loader.segment_vsize(i);

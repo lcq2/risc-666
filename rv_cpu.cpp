@@ -138,7 +138,7 @@ enum riscv_register
 };
 
 rv_cpu::rv_cpu(rv_memory& memory)
-    : memory_{memory}
+    : memory_{memory}, sdl_{memory}
 {
 
 }
@@ -839,6 +839,9 @@ void rv_cpu::handle_user_exception()
     case rv_exception ::illegal_instruction:
         handle_illegal_instruction();
         break;
+    default:
+        printf("Diocane!\n");
+        break;
     }
 
     exception_raised_ = false;
@@ -911,7 +914,10 @@ rv_uint rv_cpu::syscall_open(rv_uint arg0, rv_uint arg1, rv_uint arg2)
     int flags = (int)arg1;
     int mode = (int)arg2;
 
-    return open(pathname, newlib_translate_open_flags(flags), mode) != -1 ? 0 : (rv_uint)(-errno);
+    int res = open(pathname, newlib_translate_open_flags(flags), mode);
+    if (res == -1)
+        return (rv_uint)(-errno);
+    return (rv_uint)res;
 }
 
 // ssize_t write(int fd, const void *buf, size_t count);
@@ -920,7 +926,10 @@ rv_uint rv_cpu::syscall_write(rv_uint arg0, rv_uint arg1, rv_uint arg2)
     const void *buf = arg1 != 0 ? memory_.ram_ptr(arg1) : nullptr;
     size_t count = (size_t)arg2;
     int fd = (int)arg0;
-    return write(fd, buf, count) != -1 ? 0 : (rv_uint)(-errno);
+    int res = (int)write(fd, buf, count);
+    if (res == -1)
+        return (rv_uint)(-errno);
+    return (rv_uint)res;
 }
 
 // ssize_t read(int fd, void *buf, size_t count);
@@ -929,7 +938,10 @@ rv_uint rv_cpu::syscall_read(rv_uint arg0, rv_uint arg1, rv_uint arg2)
     void *buf = arg1 != 0 ? memory_.ram_ptr(arg1) : nullptr;
     size_t count = (size_t)arg2;
     int fd = (int)arg0;
-    return read(fd, buf, count) != -1 ? 0 : (rv_uint)(-errno);
+    int res = (int)read(fd, buf, count);
+    if (res == -1)
+        return (rv_uint)(-errno);
+    return (rv_uint)res;
 }
 
 // int close(int fd)
@@ -956,7 +968,10 @@ rv_uint rv_cpu::syscall_lseek(rv_uint arg0, rv_uint arg1, rv_uint arg2)
     int fd = (int)arg0;
     off_t where = (off_t)arg1;
     int whence = (int)arg2;
-    return lseek(fd, where, whence) != -1 ? 0 : (rv_uint)(-errno);
+    int res = (int)lseek(fd, where, whence);
+    if (res == -1)
+        return (rv_uint)(-errno);
+    return (rv_uint)res;
 }
 
 rv_uint rv_cpu::syscall_openat(rv_uint arg0, rv_uint arg1, rv_uint arg2, rv_uint arg3)
@@ -966,7 +981,10 @@ rv_uint rv_cpu::syscall_openat(rv_uint arg0, rv_uint arg1, rv_uint arg2, rv_uint
     int flags = (int)arg2;
     int mode = (int)arg3;
 
-    return openat(dirfd, pathname, flags, mode) != -1 ? 0 : (rv_uint)(-errno);
+    int res = openat(dirfd, pathname, flags, mode);
+    if (res == -1)
+        return (rv_uint)(-errno);
+    return (rv_uint)res;
 }
 
 rv_uint rv_cpu::syscall_gettimeofday(rv_uint arg0, rv_uint arg1)
@@ -1036,6 +1054,34 @@ void rv_cpu::dispatch_syscall(rv_uint syscall_no,
 
     case SYS_gettimeofday:
         regs_[a0] = syscall_gettimeofday(arg0, arg1);
+        break;
+
+    case SYS_av_init:
+        regs_[a0] = sdl_.syscall_init(arg0, arg1);
+        break;
+
+    case SYS_av_delay:
+        regs_[a0] = sdl_.syscall_delay(arg0);
+        break;
+
+    case SYS_av_update:
+        regs_[a0] = sdl_.syscall_update(arg0);
+        break;
+
+    case SYS_av_set_palette:
+        regs_[a0] = sdl_.syscall_set_palette(arg0, arg1);
+        break;
+
+    case SYS_av_get_ticks:
+        regs_[a0] = sdl_.syscall_get_ticks();
+        break;
+
+    case SYS_av_poll_event:
+        regs_[a0] = sdl_.syscall_poll_event();
+        break;
+
+    case SYS_av_shutdown:
+        regs_[a0] = sdl_.syscall_shutdown();
         break;
     }
 }

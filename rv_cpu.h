@@ -4,8 +4,10 @@
 #include <type_traits>
 #include <limits>
 #include <array>
+#include <SDL2/SDL.h>
 #include "rv_global.h"
 #include "rv_memory.h"
+#include "rv_sdl.h"
 
 class rv_cpu
 {
@@ -91,6 +93,7 @@ private:
     std::array<rv_uint, 32> regs_;
     rv_uint amo_res_;
     rv_memory& memory_;
+    rv_sdl sdl_;
 
     bool exception_raised_;
     rv_exception exception_code_;
