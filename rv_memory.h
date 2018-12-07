@@ -1,7 +1,3 @@
-//
-// Created by quake2 on 12/3/18.
-//
-
 #pragma once
 #include <cstdint>
 #include <cstring>
