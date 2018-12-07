@@ -1,0 +1,27 @@
+# TODO
+
+Project goal: emulate as much as possible latest DooM versions, ideally from DooM to Hexen, possibly Final Doom.
+
+Roughtly in the order I'm going to do it:
+- better input handling
+- TEST TEST TEST
+- cleanup and polish rv_av_* APIs, used to interact with host audio/video
+- TEST TEST TEST
+- audio and music
+- TEST TEST TEST
+- scaled hires graphics
+- TEST TEST TEST
+- add support for compressed RISC-V instructions
+- TEST TEST TEST
+- add support for floating point (not strictly needed for old-school DooM, but it's better to have it)
+- TEST TEST TEST
+- switch from newlib to musl (this will essentially drop multiplatform support, I'll need to work on a translation layer)
+- TEST TEST TEST
+- merge with more modern ports (e.g. PrBoom and similar) or doomclassic as released in Doom3-BFG
+- TEST TEST TEST
+- add support for Hexen and Heretic, they're too good to be left out
+- TEST TEST TEST
+- JIT, either through LLVM or manual
+- TEST TEST TEST
+
+Yeah, there's a lot fo testing to be done...especially with full versions...
