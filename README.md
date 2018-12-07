@@ -24,6 +24,8 @@ See rv_av_api.h and rv_av_api.c for more details.
 - Input handling
 - Audio
 - Network
+- Support for custom WADs and DooM mods in general
+- Support for Hexen, Heretic
 - A lot...
 
 hey this is just an experiment :D
@@ -49,6 +51,9 @@ To exit the emulation...send a SIGKILL to the process :D
 - Input handling
 - Audio
 - Scaled "hires" mode
+
+## About doom1.wad
+This is the shareware demo of course. It's the only thing I have right now to test it, since I don't have my DooM CDs with me.
 
 ## RISC-V emulation details
 Currently only rv32iam is supported, it's enough for what I need. In the future I will add floating point and compressed instructions to reduce overall code size.
