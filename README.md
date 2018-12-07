@@ -4,7 +4,9 @@ A RISC-V user-mode emulator that runs DooM
 ![DooM Menu 1](https://github.com/lcq2/lcq2.github.io/blob/master/risc_666/risc_666_1.png?raw=true "Shareware screen 1")
 ![DooM Menu 2](https://github.com/lcq2/lcq2.github.io/blob/master/risc_666/risc_666_2.png?raw=true "Shareware screen 2")
 ![DooM Menu 3](https://github.com/lcq2/lcq2.github.io/blob/master/risc_666/risc_666_3.png?raw=true "Shareware screen 3")
+![DooM video](https://github.com/lcq2/lcq2.github.io/blob/master/risc_666/risc_666.gif?raw=true "Video")
 
+(the video is slow because of gif conversion)
 ## Introduction
 Some months ago I came across the "new" RISC-V architecture and I found it very interesting. So I started to play around with it a bit and I discovered that I really liked it, mostly for its simplicity. So the first idea that came into my mind was of course to port DooM to it. But I needed a system where to run code, of course buying a RISC-V dev board or using qemu is too easy and trivial, so I choose to write my own RISC-V emulator and be sure that it could at least run DooM, as a general benchmark.
 
@@ -21,7 +23,7 @@ Basically this means that from the point of view of DooM running in my emulator,
 See rv_av_api.h and rv_av_api.c for more details.
 
 ## Missing
-- Input handling
+- ~~Input handling~~
 - Audio
 - Network
 - Support for custom WADs and DooM mods in general
@@ -48,7 +50,7 @@ and DooM should start. Be sure to have SDL2 before building risc_666.
 To exit the emulation...send a SIGKILL to the process :D
 
 ## Coming soon
-- Input handling
+- ~~Input handling~~
 - Audio
 - Scaled "hires" mode
 
