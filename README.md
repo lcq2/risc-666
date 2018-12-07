@@ -53,7 +53,7 @@ To exit the emulation...send a SIGKILL to the process :D
 - Scaled "hires" mode
 
 ## About doom1.wad
-This is the shareware demo of course. It's the only thing I have right now to test it, since I don't have my DooM CDs with me.
+This is the shareware demo of course. It's the only thing I have right now to test it.
 
 ## RISC-V emulation details
 Currently only rv32iam is supported, it's enough for what I need. In the future I will add floating point and compressed instructions to reduce overall code size.
