@@ -3,6 +3,7 @@
 #include <functional>
 #include <type_traits>
 #include <limits>
+#include <stdexcept>
 #include <array>
 #include <SDL2/SDL.h>
 #include "rv_global.h"
@@ -60,7 +61,6 @@ private:
     bool csr_write(uint32_t csr, rv_uint csr_value);
 
     bool csr_rw(uint32_t csr, uint32_t rd, rv_uint new_value, uint32_t csrop);
-    void execute_mret();
 
     void dump_regs();
 

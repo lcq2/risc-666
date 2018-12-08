@@ -664,6 +664,7 @@ void rv_cpu::execute_amo(uint32_t insn)
     }
     next_insn();
 }
+
 void rv_cpu::execute_misc_mem(uint32_t insn)
 {
     // fence and fence.i are nops
@@ -840,7 +841,6 @@ void rv_cpu::handle_user_exception()
         handle_illegal_instruction();
         break;
     default:
-        printf("Diocane!\n");
         break;
     }
 

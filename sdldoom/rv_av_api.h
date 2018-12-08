@@ -8,7 +8,7 @@ int av_set_framebuffer(uint8_t *pixels);
 void av_delay(uint32_t ms);
 int av_update();
 int av_poll_event(struct av_event *evt);
-int av_set_palette(uint32_t *palette, int ncolors);
+int av_set_palette(struct av_color *palette, int ncolors);
 uint32_t av_get_ticks();
 void av_shutdown();
 

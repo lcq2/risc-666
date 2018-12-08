@@ -1,5 +1,7 @@
-#include <iostream>
 #include <string>
+#include <thread>
+#include <chrono>
+#include <ratio>
 #include <getopt.h>
 #include "elfloader.h"
 #include "rv_memory.h"
@@ -55,6 +57,7 @@ int main(int argc, char *argv[])
             last_vaddr = loader.segment_vaddress(i);
             last_vsize = loader.segment_vsize(i);
         }
+
         last_vsize = last_vsize + (0x1000 - (last_vsize%0x1000));
 
         memory.prepare_environment(argc, argv, optind);
@@ -62,6 +65,23 @@ int main(int argc, char *argv[])
 
         rv_cpu cpu(memory);
         cpu.reset(loader.entry_point());
+
+#ifdef PROFILEME
+        // start profiling thread
+        std::thread([&cpu]() {
+            using namespace std::chrono_literals;
+            uint64_t prev_cycle = cpu.cycle_count();
+
+            for (;;) {
+                std::this_thread::sleep_for(1s);
+                uint64_t cur_cycle = cpu.cycle_count();
+                uint64_t delta = cur_cycle - prev_cycle;
+                prev_cycle = cur_cycle;
+                fprintf(stderr, "[i] MIPS: %.2f\n", double(delta)/double(1e6));
+            }
+        }).detach();
+#endif
+
         for (;;) {
             cpu.run(500000);
             if (cpu.emulation_exit())

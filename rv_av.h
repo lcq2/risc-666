@@ -675,6 +675,14 @@ enum SYS_av_syscalls
     SYS_av_shutdown
 };
 
+struct av_color
+{
+    uint8_t r;
+    uint8_t g;
+    uint8_t b;
+    uint8_t a;
+};
+
 struct av_event
 {
     uint32_t event_type;

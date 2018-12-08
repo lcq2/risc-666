@@ -91,29 +91,28 @@ rv_uint rv_sdl::syscall_update()
 rv_uint rv_sdl::syscall_poll_event(rv_uint arg0)
 {
     if (arg0 == 0)
-        return (rv_uint)-1;
+        return (rv_uint)-EINVAL;
 
     SDL_Event event;
     if(SDL_PollEvent(&event)) {
+        av_event *evt = reinterpret_cast<av_event*>(memory_.ram_ptr(arg0));
+        evt->timestamp = SDL_GetTicks();
+
         switch (event.type) {
         case SDL_KEYDOWN:
         case SDL_KEYUP: {
-            av_event_keyboard *keyevt = reinterpret_cast<av_event_keyboard *>(memory_.ram_ptr(arg0));
+            av_event_keyboard *keyevt = reinterpret_cast<av_event_keyboard *>(evt);
             if (event.type == SDL_KEYDOWN)
                 keyevt->hdr.event_type = AV_event_keydown;
             else if (event.type == SDL_KEYUP)
                 keyevt->hdr.event_type = AV_event_keyup;
             keyevt->key.scan_code = event.key.keysym.scancode;
             keyevt->key.vk_code = event.key.keysym.sym;
-            keyevt->hdr.timestamp = SDL_GetTicks();
         }
             break;
 
-        case SDL_QUIT: {
-            av_event *evt = reinterpret_cast<av_event *>(memory_.ram_ptr(arg0));
+        case SDL_QUIT:
             evt->event_type = AV_event_quit;
-            evt->timestamp = SDL_GetTicks();
-        }
             break;
         }
         return 1;

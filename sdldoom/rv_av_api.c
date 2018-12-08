@@ -57,7 +57,7 @@ int av_update()
 	return syscall_errno(SYS_av_update, 0, 0, 0, 0, 0, 0);
 }
 
-int av_set_palette(uint32_t *palette, int ncolors)
+int av_set_palette(struct av_color *palette, int ncolors)
 {
 	return syscall_errno(SYS_av_set_palette, palette, ncolors, 0, 0, 0, 0);
 }

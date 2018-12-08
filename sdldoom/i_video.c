@@ -251,16 +251,8 @@ void I_ReadScreen (byte* scr)
 //
 void I_SetPalette (byte* palette)
 {
-    typedef struct
-    {
-        uint8_t r;
-        uint8_t g;
-        uint8_t b;
-        uint8_t a;
-    } RGBA_Color;
-
     int i;
-    RGBA_Color colors[256];
+    struct av_color colors[256];
 
     for ( i=0; i<256; ++i ) {
 	    colors[i].r = gammatable[usegamma][*palette++];
@@ -269,7 +261,7 @@ void I_SetPalette (byte* palette)
 	    colors[i].a = 255;
     }
 
-    av_set_palette((uint32_t *)colors, 256);
+    av_set_palette(colors, 256);
 }
 
 
