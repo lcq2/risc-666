@@ -1,11 +1,7 @@
 #pragma once
 
-#include <functional>
-#include <type_traits>
 #include <limits>
-#include <stdexcept>
 #include <array>
-#include <SDL2/SDL.h>
 #include "rv_global.h"
 #include "rv_memory.h"
 #include "rv_sdl.h"

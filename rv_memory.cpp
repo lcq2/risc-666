@@ -16,9 +16,7 @@ rv_memory::rv_memory(rv_uint ram_size)
 
 rv_memory::~rv_memory()
 {
-    if (ram_ != nullptr) {
-        delete [] ram_;
-    }
+    delete [] ram_;
 }
 
 void rv_memory::map_region(rv_uint address, const uint8_t *data, size_t len, int prot)
