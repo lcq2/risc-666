@@ -323,7 +323,7 @@ void G_BuildTiccmd (ticcmd_t* cmd)
 	side += sidemove[speed]; 
     if (gamekeydown[key_strafeleft]) 
 	side -= sidemove[speed];
-    
+
     // buttons
     cmd->chatchar = HU_dequeueChatChar(); 
  
@@ -418,7 +418,7 @@ void G_BuildTiccmd (ticcmd_t* cmd)
 	side = MAXPLMOVE; 
     else if (side < -MAXPLMOVE) 
 	side = -MAXPLMOVE; 
- 
+
     cmd->forwardmove += forward; 
     cmd->sidemove += side;
     

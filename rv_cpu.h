@@ -21,16 +21,16 @@ public:
     int emulation_exit_status() const { return emulation_exit_status_; }
 
 private:
-    uint32_t decode_rd(uint32_t insn) { return (insn >> 7) & 0x1F; }
-    uint32_t decode_rs1(uint32_t insn) { return (insn >> 15) & 0x1F; }
-    uint32_t decode_rs2(uint32_t insn) { return (insn >> 20) & 0x1F; }
-    uint32_t decode_funct3(uint32_t insn) { return (insn >> 12) & 0b111; }
+    uint32_t decode_rd(uint32_t insn) const { return (insn >> 7) & 0x1F; }
+    uint32_t decode_rs1(uint32_t insn) const { return (insn >> 15) & 0x1F; }
+    uint32_t decode_rs2(uint32_t insn) const { return (insn >> 20) & 0x1F; }
+    uint32_t decode_funct3(uint32_t insn) const { return (insn >> 12) & 0b111; }
 
     // extract [low, high] bits from a 32bit value
-    uint32_t bits(uint32_t val, uint32_t low, uint32_t high) { return (val >> low) & ((1 << (high - low + 1)) - 1); }
+    uint32_t bits(uint32_t val, uint32_t low, uint32_t high) const { return (val >> low) & ((1 << (high - low + 1)) - 1); }
 
     // extract a single bit from a 32bit value
-    uint32_t bit(uint32_t val, uint32_t bit) { return (val >> bit) & 1; }
+    uint32_t bit(uint32_t val, uint32_t bit) const { return (val >> bit) & 1; }
 
     void next_insn(rv_uint cnt = 4) { pc_ += cnt; }
     void jump_insn(rv_uint newpc) { pc_ = newpc; }

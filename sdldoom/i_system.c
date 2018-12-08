@@ -27,9 +27,6 @@ rcsid[] = "$Id: m_bbox.c,v 1.1 1997/02/03 22:45:10 b1 Exp $";
 #include <stdlib.h>
 #include <stdarg.h>
 #include <ctype.h>
-/*
-#include "SDL.h"
-#include "SDL_timer.h"*/
 
 #include "doomdef.h"
 #include "m_misc.h"
@@ -44,9 +41,7 @@ rcsid[] = "$Id: m_bbox.c,v 1.1 1997/02/03 22:45:10 b1 Exp $";
 #endif
 #include "i_system.h"
 
-#ifdef RISC_666
 #include "rv_av_api.h"
-#endif
 
 
 

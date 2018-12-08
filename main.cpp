@@ -25,7 +25,7 @@ int main(int argc, char *argv[])
         case 'm':
             convres = strtoul(optarg, nullptr, 10);
             if (convres > 512_MiB || errno == ERANGE) {
-                fprintf(stderr, "[e] error: > 512 MiB is too much, sorry...\n");
+                fprintf(stderr, "[e] error: > 512 MiB is too much for DooM, sorry...\n");
                 exit(EXIT_FAILURE);
             }
             memory_size = (rv_uint)convres;

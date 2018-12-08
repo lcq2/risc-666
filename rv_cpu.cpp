@@ -145,7 +145,6 @@ rv_cpu::rv_cpu(rv_memory& memory)
 
 void rv_cpu::reset(rv_uint pc)
 {
-    // execution starts at 0x1000 in user mode
     pc_ = pc;
 
     // initialize all registers to 0
@@ -179,6 +178,7 @@ void rv_cpu::run(size_t nCycles)
             raise_memory_exception();
             break;
         }
+
 
         // add support for compressed instructions!
         const auto opcode = (rv_opcode) ((insn & kRiscvOpcodeMask) >> 2);
@@ -837,7 +837,7 @@ void rv_cpu::handle_user_exception()
     case rv_exception::ecall_from_umode:
         dispatch_syscall(regs_[a7], regs_[a0], regs_[a1], regs_[a2], regs_[a3], regs_[a4], regs_[a5]);
         break;
-    case rv_exception ::illegal_instruction:
+    case rv_exception::illegal_instruction:
         handle_illegal_instruction();
         break;
     default:
@@ -1012,81 +1012,83 @@ void rv_cpu::dispatch_syscall(rv_uint syscall_no,
         arg2, arg3, arg4, arg5);
 #endif
 
+    rv_uint retval = 0;
     switch (syscall_no) {
     case SYS_fstat:
-        regs_[a0] = syscall_fstat(arg0, arg1);
+        retval = syscall_fstat(arg0, arg1);
         break;
 
     case SYS_stat:
-        regs_[a0] = syscall_stat(arg0, arg1);
+        retval = syscall_stat(arg0, arg1);
         break;
 
     case SYS_brk:
-        regs_[a0] = syscall_brk(arg0);
+        retval = syscall_brk(arg0);
         break;
 
     case SYS_open:
-        regs_[a0] = syscall_open(arg0, arg1, arg2);
+        retval = syscall_open(arg0, arg1, arg2);
         break;
 
     case SYS_read:
-        regs_[a0] = syscall_read(arg0, arg1, arg2);
+        retval = syscall_read(arg0, arg1, arg2);
         break;
 
     case SYS_write:
-        regs_[a0] = syscall_write(arg0, arg1, arg2);
+        retval = syscall_write(arg0, arg1, arg2);
         break;
 
     case SYS_lseek:
-        regs_[a0] = syscall_lseek(arg0, arg1, arg2);
+        retval = syscall_lseek(arg0, arg1, arg2);
         break;
 
     case SYS_close:
-        regs_[a0] = syscall_close(arg0);
+        retval = syscall_close(arg0);
         break;
 
     case SYS_exit:
-        regs_[a0] = syscall_exit(arg0);
+        retval = syscall_exit(arg0);
         break;
 
     case SYS_openat:
-        regs_[a0] = syscall_openat(arg0, arg1, arg2, arg3);
+        retval = syscall_openat(arg0, arg1, arg2, arg3);
         break;
 
     case SYS_gettimeofday:
-        regs_[a0] = syscall_gettimeofday(arg0, arg1);
+        retval = syscall_gettimeofday(arg0, arg1);
         break;
 
     case SYS_av_init:
-        regs_[a0] = sdl_.syscall_init(arg0, arg1);
+        retval = sdl_.syscall_init(arg0, arg1);
         break;
 
     case SYS_av_set_framebuffer:
-        regs_[a0] = sdl_.syscall_set_framebuffer(arg0);
+        retval = sdl_.syscall_set_framebuffer(arg0);
         break;
 
     case SYS_av_delay:
-        regs_[a0] = sdl_.syscall_delay(arg0);
+        retval = sdl_.syscall_delay(arg0);
         break;
 
     case SYS_av_update:
-        regs_[a0] = sdl_.syscall_update();
+        retval = sdl_.syscall_update();
         break;
 
     case SYS_av_set_palette:
-        regs_[a0] = sdl_.syscall_set_palette(arg0, arg1);
+        retval = sdl_.syscall_set_palette(arg0, arg1);
         break;
 
     case SYS_av_get_ticks:
-        regs_[a0] = sdl_.syscall_get_ticks();
+        retval = sdl_.syscall_get_ticks();
         break;
 
     case SYS_av_poll_event:
-        regs_[a0] = sdl_.syscall_poll_event(arg0);
+        retval = sdl_.syscall_poll_event(arg0);
         break;
 
     case SYS_av_shutdown:
-        regs_[a0] = sdl_.syscall_shutdown();
+        retval = sdl_.syscall_shutdown();
         break;
     }
+    regs_[a0] = retval;
 }

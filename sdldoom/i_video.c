@@ -40,8 +40,6 @@ rcsid[] = "$Id: i_x.c,v 1.6 1997/02/03 22:45:10 b1 Exp $";
 
 #include "rv_av_api.h"
 
-//SDL_Surface *screen;
-
 // Fake mouse handling.
 boolean		grabMouse;
 
@@ -133,6 +131,7 @@ void I_GetEvent(struct av_event *evt)
     uint8_t buttonstate;
     struct av_event_keyboard *keyevt;
     event_t event;
+    memset(&event, 0, sizeof(event_t));
 
     switch (evt->event_type) {
     case AV_event_keydown:

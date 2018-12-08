@@ -15,12 +15,15 @@ rv_uint rv_sdl::syscall_init(rv_uint arg0, rv_uint arg1)
     width_ = (int)arg0;
     height_ = (int)arg1;
 
-    if (SDL_CreateWindowAndRenderer(width_, height_, 0, &main_window_, &main_renderer_) < 0) {
+    if (SDL_CreateWindowAndRenderer(width_*2, height_*2, 0, &main_window_, &main_renderer_) < 0) {
         log_sdl_error("init", "CreateWindowAndRenderer");
         return (rv_uint)-1;
     }
 
     SDL_SetWindowTitle(main_window_, "RISC-666");
+
+    SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "nearest");
+    SDL_RenderSetLogicalSize(main_renderer_, width_, height_);
 
     main_surface_ = SDL_CreateRGBSurface(0, width_, height_, 32, 0, 0, 0, 0);
     if (main_surface_ == nullptr) {
