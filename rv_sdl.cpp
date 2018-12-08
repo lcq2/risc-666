@@ -1,24 +1,38 @@
 #include "rv_sdl.h"
 
+void rv_sdl::log_sdl_error(const char *syscall_name, const char *sdl_func)
+{
+    fprintf(stderr, "[e] error: syscall_%s - SDL_%s() failed with: %s\n", syscall_name, sdl_func, SDL_GetError());
+}
+
 rv_uint rv_sdl::syscall_init(rv_uint arg0, rv_uint arg1)
 {
-    int retval = SDL_Init(SDL_INIT_VIDEO);
-    if (retval < 0) {
-        fprintf(stderr, "[e] error: SDL_Init() failed with %s\n", SDL_GetError());
-        return (rv_uint)retval;
+    if (SDL_Init(SDL_INIT_VIDEO) < 0) {
+        log_sdl_error("init", "Init");
+        return (rv_uint)-1;
     }
 
     width_ = (int)arg0;
     height_ = (int)arg1;
 
-    retval = SDL_CreateWindowAndRenderer(width_, height_, 0, &main_window_, &main_renderer_);
-    if (retval < 0)
-        return (rv_uint)retval;
+    if (SDL_CreateWindowAndRenderer(width_, height_, 0, &main_window_, &main_renderer_) < 0) {
+        log_sdl_error("init", "CreateWindowAndRenderer");
+        return (rv_uint)-1;
+    }
 
     SDL_SetWindowTitle(main_window_, "RISC-666");
+
     main_surface_ = SDL_CreateRGBSurface(0, width_, height_, 32, 0, 0, 0, 0);
-//    screen_surface_ = SDL_CreateRGBSurface(0, width_, height_, 8, 0, 0, 0, 0);
+    if (main_surface_ == nullptr) {
+        log_sdl_error("init", "CreateRGBSurface");
+        return (rv_uint)-1;
+    }
+
     main_texture_ = SDL_CreateTexture(main_renderer_, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, width_, height_);
+    if (main_texture_ == nullptr) {
+        log_sdl_error("init", "CreateTexture");
+        return (rv_uint)-1;
+    }
     return 0;
 }
 
@@ -30,8 +44,8 @@ rv_uint rv_sdl::syscall_set_palette(rv_uint arg0, rv_uint arg1)
     SDL_Color *colors = reinterpret_cast<SDL_Color*>(memory_.ram_ptr(arg0));
     int cnt = (int)arg1;
 
-    if (SDL_SetPaletteColors(screen_surface_->format->palette, colors, 0, cnt)) {
-        fprintf(stderr, "SDL_SetPaletteColors() failed with: %s\n", SDL_GetError());
+    if (SDL_SetPaletteColors(screen_surface_->format->palette, colors, 0, cnt) < 0) {
+        log_sdl_error("set_palette", "SetPaletteColors");
         return (rv_uint)-1;
     }
     return 0;
@@ -45,7 +59,7 @@ rv_uint rv_sdl::syscall_set_framebuffer(rv_uint arg0)
     void *pixels = reinterpret_cast<void*>(memory_.ram_ptr(arg0));
     screen_surface_ = SDL_CreateRGBSurfaceFrom(pixels, width_, height_, 8, width_, 0, 0, 0, 0);
     if (screen_surface_ == nullptr) {
-        fprintf(stderr, "SDL_CreateRGBSurfaceFrom() failed with %s\n", SDL_GetError());
+        log_sdl_error("set_framebuffer", "CreateRGBSurfaceFrom");
         return (rv_uint)-1;
     }
     return 0;
@@ -54,19 +68,19 @@ rv_uint rv_sdl::syscall_set_framebuffer(rv_uint arg0)
 rv_uint rv_sdl::syscall_update()
 {
     if (SDL_BlitSurface(screen_surface_, nullptr, main_surface_, nullptr) < 0) {
-        fprintf(stderr, "[e] error: SDL_BlitSurface() failed with %s\n", SDL_GetError());
+        log_sdl_error("update", "BlitSurface");
         return (rv_uint)-1;
     }
     if (SDL_UpdateTexture(main_texture_, nullptr, main_surface_->pixels, main_surface_->pitch) < 0) {
-        fprintf(stderr, "[e] error: SDL_UpdateTexture() failed with %s\n", SDL_GetError());
+        log_sdl_error("update", "UpdateTexture");
         return (rv_uint)-1;
     }
     if (SDL_RenderClear(main_renderer_) < 0) {
-        fprintf(stderr, "[e] error: SDL_RenderClear() failed with %s\n", SDL_GetError());
+        log_sdl_error("update", "RenderClear");
         return (rv_uint)-1;
     }
     if (SDL_RenderCopy(main_renderer_, main_texture_, nullptr, nullptr) < 0) {
-        fprintf(stderr, "[e] error: SDL_RenderCopy() failed with %s\n", SDL_GetError());
+        log_sdl_error("update", "RenderCopy");
         return (rv_uint)-1;
     }
     SDL_RenderPresent(main_renderer_);

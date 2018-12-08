@@ -20,6 +20,10 @@ public:
     rv_uint syscall_poll_event(rv_uint arg0);
     rv_uint syscall_get_ticks();
     rv_uint syscall_shutdown();
+
+private:
+    void log_sdl_error(const char* syscall_name, const char* sdl_func);
+
 private:
     rv_memory& memory_;
     SDL_Window *main_window_ = nullptr;

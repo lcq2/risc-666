@@ -1,5 +1,5 @@
 CC=riscv32-unknown-elf-gcc
-CFLAGS=-Os -I.
+CFLAGS=-O2 -I.
 DEPS = \
 	am_map.h		\
 	d_englsh.h	\
