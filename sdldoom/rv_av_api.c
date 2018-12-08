@@ -42,14 +42,19 @@ int av_init(int width, int height)
 	return syscall_errno(SYS_av_init, width, height, 0, 0, 0, 0);
 }
 
+int av_set_framebuffer(uint8_t *pixels)
+{
+  return syscall_errno(SYS_av_set_framebuffer, pixels, 0, 0, 0, 0, 0);
+}
+
 void av_delay(uint32_t ms)
 {
 	syscall_errno(SYS_av_delay, ms, 0, 0, 0, 0, 0);
 }
 
-int av_update(uint8_t *screen)
+int av_update()
 {
-	return syscall_errno(SYS_av_update, screen, 0, 0, 0, 0, 0);
+	return syscall_errno(SYS_av_update, 0, 0, 0, 0, 0, 0);
 }
 
 int av_set_palette(uint32_t *palette, int ncolors)

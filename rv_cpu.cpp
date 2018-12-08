@@ -1061,12 +1061,16 @@ void rv_cpu::dispatch_syscall(rv_uint syscall_no,
         regs_[a0] = sdl_.syscall_init(arg0, arg1);
         break;
 
+    case SYS_av_set_framebuffer:
+        regs_[a0] = sdl_.syscall_set_framebuffer(arg0);
+        break;
+
     case SYS_av_delay:
         regs_[a0] = sdl_.syscall_delay(arg0);
         break;
 
     case SYS_av_update:
-        regs_[a0] = sdl_.syscall_update(arg0);
+        regs_[a0] = sdl_.syscall_update();
         break;
 
     case SYS_av_set_palette:

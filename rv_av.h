@@ -666,6 +666,7 @@ enum AV_event_type
 enum SYS_av_syscalls
 {
     SYS_av_init = 2048,
+    SYS_av_set_framebuffer,
     SYS_av_update,
     SYS_av_set_palette,
     SYS_av_delay,

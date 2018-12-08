@@ -17,7 +17,7 @@ rv_uint rv_sdl::syscall_init(rv_uint arg0, rv_uint arg1)
 
     SDL_SetWindowTitle(main_window_, "RISC-666");
     main_surface_ = SDL_CreateRGBSurface(0, width_, height_, 32, 0, 0, 0, 0);
-    screen_surface_ = SDL_CreateRGBSurface(0, width_, height_, 8, 0, 0, 0, 0);
+//    screen_surface_ = SDL_CreateRGBSurface(0, width_, height_, 8, 0, 0, 0, 0);
     main_texture_ = SDL_CreateTexture(main_renderer_, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, width_, height_);
     return 0;
 }
@@ -31,29 +31,28 @@ rv_uint rv_sdl::syscall_set_palette(rv_uint arg0, rv_uint arg1)
     int cnt = (int)arg1;
 
     if (SDL_SetPaletteColors(screen_surface_->format->palette, colors, 0, cnt)) {
-        printf("SDL_SetPaletteColors() failed with: %s\n", SDL_GetError());
+        fprintf(stderr, "SDL_SetPaletteColors() failed with: %s\n", SDL_GetError());
         return (rv_uint)-1;
     }
     return 0;
 }
 
-
-rv_uint rv_sdl::syscall_update(rv_uint arg0)
+rv_uint rv_sdl::syscall_set_framebuffer(rv_uint arg0)
 {
     if (arg0 == 0)
         return (rv_uint)-EINVAL;
 
-    const uint8_t* bits = reinterpret_cast<const uint8_t*>(memory_.ram_ptr(arg0));
-    if (SDL_MUSTLOCK(screen_surface_)) {
-        if (SDL_LockSurface(screen_surface_) < 0) {
-            fprintf(stderr, "[e] error: SDL_LockSurface() failed with %s\n", SDL_GetError());
-            return (rv_uint)-1;
-        }
+    void *pixels = reinterpret_cast<void*>(memory_.ram_ptr(arg0));
+    screen_surface_ = SDL_CreateRGBSurfaceFrom(pixels, width_, height_, 8, width_, 0, 0, 0, 0);
+    if (screen_surface_ == nullptr) {
+        fprintf(stderr, "SDL_CreateRGBSurfaceFrom() failed with %s\n", SDL_GetError());
+        return (rv_uint)-1;
     }
-    memcpy(screen_surface_->pixels, bits, width_*height_);
-    if (SDL_MUSTLOCK(screen_surface_))
-        SDL_UnlockSurface(screen_surface_);
+    return 0;
+}
 
+rv_uint rv_sdl::syscall_update()
+{
     if (SDL_BlitSurface(screen_surface_, nullptr, main_surface_, nullptr) < 0) {
         fprintf(stderr, "[e] error: SDL_BlitSurface() failed with %s\n", SDL_GetError());
         return (rv_uint)-1;

@@ -81,6 +81,8 @@ void elf_loader::load()
     fprintf(stderr, "[i] loading program segments...\n");
     auto *phdr = make_ptr<Elf32_Phdr>(elf_hdr, elf_hdr->e_phoff);
     for (size_t i = 0; i < elf_hdr->e_phnum; ++i) {
+        // we care only about PT_LOAD, since these segments are actually mapped
+        // for now, we ignore the protection flag
         if (phdr->p_type == PT_LOAD) {
             fprintf(stderr, "[i] segment %d - vaddr: 0x%08x, vsize: %d\n", i, phdr->p_vaddr, phdr->p_memsz);
             segments_.emplace_back(*phdr);

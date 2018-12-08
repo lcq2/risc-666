@@ -134,21 +134,24 @@ void I_GetEvent(struct av_event *evt)
     struct av_event_keyboard *keyevt;
     event_t event;
 
-    switch (evt->event_type)
-    {
-      case AV_event_keydown:
-      keyevt = (struct av_event_keyboard *)evt;
-	event.type = ev_keydown;
-	event.data1 = xlatekey(&keyevt->key);
-	D_PostEvent(&event);
+    switch (evt->event_type) {
+    case AV_event_keydown:
+        keyevt = (struct av_event_keyboard *)evt;
+	    event.type = ev_keydown;
+	    event.data1 = xlatekey(&keyevt->key);
+	    D_PostEvent(&event);
         break;
 
-      case AV_event_keyup:
+    case AV_event_keyup:
         keyevt = (struct av_event_keyboard *)evt;
-	event.type = ev_keyup;
-	event.data1 = xlatekey(&keyevt->key);
-	D_PostEvent(&event);
-	break;
+	    event.type = ev_keyup;
+	    event.data1 = xlatekey(&keyevt->key);
+	    D_PostEvent(&event);
+	    break;
+
+    case AV_event_quit:
+        I_Quit();
+        break;
 /*
       case SDL_MOUSEBUTTONDOWN:
       case SDL_MOUSEBUTTONUP:
@@ -182,9 +185,6 @@ void I_GetEvent(struct av_event *evt)
 // 	}
 // 	break;
 // #endif
-
-       case AV_event_quit:
- 	I_Quit();
      }
 
 }
@@ -193,12 +193,7 @@ void I_GetEvent(struct av_event *evt)
 // I_StartTic
 //
 void I_StartTic (void)
-{/*
-    SDL_Event Event;
-
-    while ( SDL_PollEvent(&Event) )
-	I_GetEvent(&Event);*/
-//    av_poll_event();
+{
     char buf[AV_EVENT_BUF_SIZE] = {0};
     struct av_event *evt = (struct av_event *)&buf[0];
     while (av_poll_event(evt))
@@ -225,49 +220,20 @@ void I_FinishUpdate (void)
     int		i;
 
     // draws little dots on the bottom of the screen
-    if (devparm)
-    {
+    if (devparm) {
+    	i = I_GetTime();
+	    tics = i - lasttic;
+    	lasttic = i;
+	    if (tics > 20)
+            tics = 20;
 
-	i = I_GetTime();
-	tics = i - lasttic;
-	lasttic = i;
-	if (tics > 20) tics = 20;
-
-	for (i=0 ; i<tics*2 ; i+=2)
-	    screens[0][ (SCREENHEIGHT-1)*SCREENWIDTH + i] = 0xff;
-	for ( ; i<20*2 ; i+=2)
-	    screens[0][ (SCREENHEIGHT-1)*SCREENWIDTH + i] = 0x0;
+	    for (i=0 ; i<tics*2 ; i+=2)
+	        screens[0][ (SCREENHEIGHT-1)*SCREENWIDTH + i] = 0xff;
+	    for ( ; i<20*2 ; i+=2)
+	        screens[0][ (SCREENHEIGHT-1)*SCREENWIDTH + i] = 0x0;
     }
-/*
-    // scales the screen size before blitting it
-    if ( SDL_MUSTLOCK(screen) ) {
-	if ( SDL_LockSurface(screen) < 0 ) {
-	    return;
-	}
-    }
-    if (SDL_MUSTLOCK(screen))
-    {
-	unsigned char *olineptr;
-	unsigned char *ilineptr;
-	int y;
 
-	ilineptr = (unsigned char *) screens[0];
-	olineptr = (unsigned char *) screen->pixels;
-
-	y = SCREENHEIGHT;
-	while (y--)
-	{
-	    memcpy(olineptr, ilineptr, screen->w);
-	    ilineptr += SCREENWIDTH;
-	    olineptr += screen->pitch;
-	}
-    }*/
-/*
-    if ( SDL_MUSTLOCK(screen) ) {
-	SDL_UnlockSurface(screen);
-    }
-    SDL_UpdateRect(screen, 0, 0, 0, 0);*/
-    av_update(screens[0]);
+    av_update();
 }
 
 
@@ -291,17 +257,18 @@ void I_SetPalette (byte* palette)
         uint8_t g;
         uint8_t b;
         uint8_t a;
-    } SDL_Color;
+    } RGBA_Color;
+
     int i;
-    SDL_Color colors[256];
+    RGBA_Color colors[256];
 
     for ( i=0; i<256; ++i ) {
-	colors[i].r = gammatable[usegamma][*palette++];
-	colors[i].g = gammatable[usegamma][*palette++];
-	colors[i].b = gammatable[usegamma][*palette++];
-	colors[i].a = 255;
+	    colors[i].r = gammatable[usegamma][*palette++];
+	    colors[i].g = gammatable[usegamma][*palette++];
+	    colors[i].b = gammatable[usegamma][*palette++];
+	    colors[i].a = 255;
     }
-//    SDL_SetColors(screen, colors, 0, 256);
+
     av_set_palette((uint32_t *)colors, 256);
 }
 
@@ -312,39 +279,14 @@ void I_InitGraphics(void)
     static int	firsttime=1;
 
     if (!firsttime)
-	return;
+	    return;
     firsttime = 0;
-/*
-    video_flags = (SDL_SWSURFACE|SDL_HWPALETTE);
-    if (!!M_CheckParm("-fullscreen"))
-        video_flags |= SDL_FULLSCREEN;
-*/
+
     // check if the user wants to grab the mouse (quite unnice)
     grabMouse = !!M_CheckParm("-grabmouse");
 
-    /* We need to allocate a software surface because the DOOM! code expects
-       the screen surface to be valid all of the time.  Properly done, the
-       rendering code would allocate the video surface in video memory and
-       then call SDL_LockSurface()/SDL_UnlockSurface() around frame rendering.
-       Eventually SDL will support flipping, which would be really nice in
-       a complete-frame rendering application like this.
-    */
-    /*
-    screen = SDL_SetVideoMode(video_w, video_h, 8, video_flags);
-    if ( screen == NULL ) {
-        I_Error("Could not set %dx%d video mode: %s", video_w, video_h,
-							SDL_GetError());
-    }
-    SDL_ShowCursor(0);
-    SDL_WM_SetCaption("SDL DOOM! v1.10", "doom");
-*/
-    /* Set up the screen displays */
-  /*  if (!SDL_MUSTLOCK(screen) ) {
-	screens[0] = (unsigned char *) screen->pixels;
-    } else {
-	screens[0] = (unsigned char *) malloc (SCREENWIDTH * SCREENHEIGHT);
-        if ( screens[0] == NULL )
-            I_Error("Couldn't allocate screen memory");
-    }*/
     screens[0] = (unsigned char *)malloc(SCREENWIDTH*SCREENHEIGHT);
+    if (screens[0] == NULL)
+        I_Error("Couldn't allocate screen memory");
+    av_set_framebuffer(screens[0]);
 }

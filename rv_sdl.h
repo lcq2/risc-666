@@ -13,8 +13,9 @@ public:
     explicit rv_sdl(rv_memory& memory) : memory_{memory} {}
 
     rv_uint syscall_init(rv_uint arg0, rv_uint arg1);
+    rv_uint syscall_set_framebuffer(rv_uint arg0);
     rv_uint syscall_delay(rv_uint arg0);
-    rv_uint syscall_update(rv_uint arg0);
+    rv_uint syscall_update();
     rv_uint syscall_set_palette(rv_uint arg0, rv_uint arg1);
     rv_uint syscall_poll_event(rv_uint arg0);
     rv_uint syscall_get_ticks();

@@ -24,6 +24,9 @@ rv_memory::~rv_memory()
 void rv_memory::map_region(rv_uint address, const uint8_t *data, size_t len, int prot)
 {
     assert(address < (ram_end_-len));
+
+    // protection flag is ignored for now, proper implementation requires TLB cache
+    // otherwise it's going to be too slow
     memcpy(ram_+address, data, len);
 }
 
@@ -53,6 +56,7 @@ void rv_memory::prepare_environment(int argc, char *argv[], int optind)
     // +1 for the null entry
     char *target_env = reinterpret_cast<char*>(ram_ptr(0x100));
 
+    // fix this mess...
     while (optind < argc) {
         auto arg_len = strlen(argv[optind]);
         if (arg_len > 31)

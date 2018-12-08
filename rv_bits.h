@@ -1,6 +1,5 @@
 #pragma once
 #include <cstdint>
-#include <tuple>
 
 template<std::size_t l, std::size_t s, typename T = std::uint32_t>
 struct rv_bitfield
