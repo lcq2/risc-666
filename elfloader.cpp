@@ -12,7 +12,7 @@
 #define ELF_RISCV_MACHINE 243
 
 template<typename T>
-auto make_ptr(const void *data, size_t offset = 0)
+auto offset_ptr(const void *data, size_t offset = 0)
 {
     return reinterpret_cast<const T*>(reinterpret_cast<const uint8_t*>(data)+offset);
 }
@@ -55,7 +55,7 @@ void elf_loader::load()
 
     fprintf(stderr, "[i] checking ELF file...\n");
     // check elf magic
-    auto *elf_hdr = make_ptr<Elf32_Ehdr>(buf);
+    auto *elf_hdr = offset_ptr<Elf32_Ehdr>(buf);
     if (!check_magic(elf_hdr)) {
         throw std::runtime_error("invalid ELF file");
     }
@@ -79,7 +79,7 @@ void elf_loader::load()
     }
 
     fprintf(stderr, "[i] loading program segments...\n");
-    auto *phdr = make_ptr<Elf32_Phdr>(elf_hdr, elf_hdr->e_phoff);
+    auto *phdr = offset_ptr<Elf32_Phdr>(elf_hdr, elf_hdr->e_phoff);
     for (size_t i = 0; i < elf_hdr->e_phnum; ++i) {
         // we care only about PT_LOAD, since these segments are actually mapped
         // for now, we ignore the protection flag
@@ -87,7 +87,7 @@ void elf_loader::load()
             fprintf(stderr, "[i] segment %d - vaddr: 0x%08x, vsize: %d\n", i, phdr->p_vaddr, phdr->p_memsz);
             segments_.emplace_back(*phdr);
         }
-        phdr = make_ptr<Elf32_Phdr>(phdr, elf_hdr->e_phentsize);
+        phdr = offset_ptr<Elf32_Phdr>(phdr, elf_hdr->e_phentsize);
     }
 
     entry_point_ = elf_hdr->e_entry;
@@ -137,5 +137,5 @@ int elf_loader::segment_protection(size_t index) const
 const uint8_t* elf_loader::segment_data(size_t index) const
 {
     assert(index < segments_.size());
-    return make_ptr<uint8_t>(buffer_.data(), segments_[index].p_offset);
+    return offset_ptr<uint8_t>(buffer_.data(), segments_[index].p_offset);
 }

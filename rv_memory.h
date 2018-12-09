@@ -1,7 +1,7 @@
 #pragma once
 #include <cstdint>
 #include <cstring>
-#include <array>
+#include <vector>
 #include <type_traits>
 #include "rv_global.h"
 #include "rv_exceptions.h"
@@ -18,16 +18,6 @@ public:
     rv_uint fault_address() const { return fault_address_; }
     rv_exception last_exception() const { return last_exception_; }
 
-    bool prefetch_code(rv_uint address, uint32_t *insns, size_t count)
-    {
-        if (likely(address <= (ram_end_ - sizeof(uint32_t)*count))) {
-            memcpy(insns, ram_ + address, sizeof(uint32_t)*count);
-            return true;
-        }
-        fault_address_ = address;
-        last_exception_ = rv_exception::instruction_access_fault;
-        return false;
-    }
 
     template<typename T> bool read(rv_uint address, T& value) const
     {

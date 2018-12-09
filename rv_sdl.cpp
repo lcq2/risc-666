@@ -1,4 +1,5 @@
 #include "rv_sdl.h"
+#include <errno.h>
 
 void rv_sdl::log_sdl_error(const char *syscall_name, const char *sdl_func)
 {

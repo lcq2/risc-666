@@ -660,6 +660,9 @@ enum AV_event_type
 {
     AV_event_keydown = 0,
     AV_event_keyup,
+    AV_event_mouseup,
+    AV_event_mousedown,
+    AV_event_mousemove,
     AV_event_quit
 };
 

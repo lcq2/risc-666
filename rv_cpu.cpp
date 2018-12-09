@@ -179,7 +179,6 @@ void rv_cpu::run(size_t nCycles)
             break;
         }
 
-
         // add support for compressed instructions!
         const auto opcode = (rv_opcode) ((insn & kRiscvOpcodeMask) >> 2);
         switch (opcode) {
