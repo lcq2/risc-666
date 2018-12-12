@@ -52,12 +52,11 @@ int main(int argc, char *argv[])
 
         // this is wrong, there's no guarantee that the last segment comes last in memory
         // but for now it's ok...for newlib layout at least
-        for (size_t i = 0, e = loader.num_segments(); i < e; ++i) {
-            memory.map_region(loader.segment_vaddress(i), loader.segment_data(i), loader.segment_psize(i), 0);
-            last_vaddr = loader.segment_vaddress(i);
-            last_vsize = loader.segment_vsize(i);
+        for (const auto& seg : loader.segments()) {
+            last_vaddr = seg.virtual_address();
+            last_vsize = seg.memory_size();
+            memory.map_region(last_vaddr, loader.pointer_to<uint8_t>(seg), seg.file_size(), 0);
         }
-
         last_vsize = last_vsize + (0x1000 - (last_vsize%0x1000));
 
         memory.prepare_environment(argc, argv, optind);
@@ -65,7 +64,7 @@ int main(int argc, char *argv[])
 
         rv_cpu cpu(memory);
         cpu.reset(loader.entry_point());
-        
+
 #ifdef PROFILEME
         // start profiling thread
         std::thread([&cpu]() {

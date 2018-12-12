@@ -4,7 +4,40 @@
 #include <vector>
 #include <cstdint>
 #include <cassert>
+#include <unordered_map>
+#include <tuple>
 #include <elf.h>
+
+#if 0
+typedef struct
+{
+  Elf32_Word	p_type;			/* Segment type */
+  Elf32_Off	p_offset;		/* Segment file offset */
+  Elf32_Addr	p_vaddr;		/* Segment virtual address */
+  Elf32_Addr	p_paddr;		/* Segment physical address */
+  Elf32_Word	p_filesz;		/* Segment size in file */
+  Elf32_Word	p_memsz;		/* Segment size in memory */
+  Elf32_Word	p_flags;		/* Segment flags */
+  Elf32_Word	p_align;		/* Segment alignment */
+} Elf32_Phdr;
+#endif
+
+class elf_segment
+{
+public:
+    elf_segment() = default;
+    elf_segment(const Elf32_Phdr* s) : segment_{s} {}
+
+    auto offset() const { return segment_->p_offset; }
+    auto virtual_address() const { return segment_->p_vaddr; }
+    auto physical_address() const { return segment_->p_paddr; }
+    auto file_size() const { return segment_->p_filesz; }
+    auto memory_size() const { return segment_->p_memsz; }
+    auto alignment() const { return segment_->p_align; }
+
+private:
+    const Elf32_Phdr* segment_ = nullptr;
+};
 
 class elf_loader
 {
@@ -13,23 +46,28 @@ public:
     ~elf_loader();
     void load();
 
-    Elf32_Addr segment_vaddress(size_t index) const;
-    Elf32_Word segment_vsize(size_t index) const;
-    Elf32_Word segment_psize(size_t index) const;
-    Elf32_Word segment_flags(size_t index) const;
-    const uint8_t* segment_data(size_t index) const;
-    int segment_protection(size_t index) const;
+    const auto& segments() const { return segments_; }
 
-    size_t num_segments() const { return segments_.size(); }
-    Elf32_Addr entry_point() const { return entry_point_; }
+    template<typename T>
+    const T* pointer_to(const elf_segment& segm) const
+    {
+        return reinterpret_cast<const T*>(buffer_.data() + segm.offset());
+    }
+
+    Elf32_Addr entry_point() const { return header_->e_entry; }
 
 private:
     bool check_magic(const Elf32_Ehdr* hdr) const;
+    std::string lookup_symbol(Elf32_Addr sym_name);
 
 private:
     std::string filename_;
     std::vector<uint8_t> buffer_;
-    std::vector<Elf32_Phdr> segments_;
-    Elf32_Ehdr header_;
-    Elf32_Addr entry_point_;
+    std::vector<elf_segment> segments_;
+    std::vector<const Elf32_Shdr*> sections_;
+    const Elf32_Shdr* symbol_table_ = nullptr;
+
+    // this definitely takes too much memory, needs to be fixed in the future
+    std::unordered_map<std::string, Elf32_Addr> symbols_;
+    const Elf32_Ehdr *header_ = nullptr;
 };
