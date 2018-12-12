@@ -44,7 +44,6 @@ public:
 
 private:
     bool check_magic(const Elf32_Ehdr* hdr) const;
-    std::string lookup_symbol(Elf32_Addr sym_name);
 
 private:
     std::string filename_;
