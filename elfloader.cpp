@@ -83,7 +83,7 @@ void elf_loader::load()
         // for now, we ignore the protection flag
         if (phdr->p_type == PT_LOAD) {
             fprintf(stderr, "[i] segment %d - vaddr: 0x%08x, vsize: %d\n", i, phdr->p_vaddr, phdr->p_memsz);
-            segments_.push_back(phdr);
+            segments_.emplace_back(phdr);
         }
         phdr = offset_ptr<Elf32_Phdr>(phdr, header_->e_phentsize);
     }
