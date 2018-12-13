@@ -44,7 +44,10 @@ public:
     bool set_brk(rv_uint offset);
     rv_uint brk() const { return brk_; }
 
+    constexpr rv_uint stack_size() const { return (rv_uint)4_MiB; }
+
     rv_uint stack_begin() const { return stack_begin_; }
+    void set_stack(rv_uint stack_begin);
     rv_uint stack_pointer() const { return stack_pointer_; }
     rv_uint stack_end() const { return stack_end_; }
 

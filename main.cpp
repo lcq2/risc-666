@@ -57,10 +57,17 @@ int main(int argc, char *argv[])
             last_vsize = seg.memory_size();
             memory.map_region(last_vaddr, loader.pointer_to<uint8_t>(seg), seg.file_size(), 0);
         }
+
+        // TODO: align to segment->alignment
         last_vsize = last_vsize + (0x1000 - (last_vsize%0x1000));
 
+        const rv_uint end_of_data = last_vaddr + last_vsize + 128;
+
+        // the stack starts right after the data segment
+        memory.set_stack(end_of_data + memory.stack_size());
+
         memory.prepare_environment(argc, argv, optind);
-        memory.set_brk(last_vaddr + last_vsize);
+        memory.set_brk(end_of_data + memory.stack_size() + 128);
 
         rv_cpu cpu(memory);
         cpu.reset(loader.entry_point());

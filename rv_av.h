@@ -704,4 +704,9 @@ struct av_event_keyboard
     struct av_key key;
 } __attribute__((packed));
 
+struct av_event_mouse
+{
+    struct av_event hdr;
+};
+
 #endif

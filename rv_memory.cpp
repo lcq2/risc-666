@@ -1,5 +1,6 @@
 #include <cstring>
 #include <cassert>
+#include <stdexcept>
 #include "rv_exceptions.h"
 #include "rv_memory.h"
 
@@ -10,8 +11,6 @@ rv_memory::rv_memory(rv_uint ram_size)
     ram_ = new uint8_t[ram_size]();
     ram_begin_ = 0;
     ram_end_ = ram_size;
-    stack_begin_ = ram_end_-sizeof(rv_uint);
-    stack_end_ = stack_begin_ - RV_STACK_SIZE;
 }
 
 rv_memory::~rv_memory()
@@ -30,8 +29,10 @@ void rv_memory::map_region(rv_uint address, const uint8_t *data, size_t len, int
 
 bool rv_memory::set_brk(rv_uint offset)
 {
-    if (offset > (ram_end_ - RV_STACK_SIZE))
+    if (offset > ram_end_ || offset < stack_end_) {
+        fprintf(stderr, "invalid brk!\n");
         return false;
+    }
     brk_ = offset;
     return true;
 }
@@ -51,7 +52,6 @@ void rv_memory::prepare_environment(int argc, char *argv[], int optind)
 
     // argument strings are stored at 0x100
     // we cannot use 0x0 because according to RISC-V specs, reading from 0 is hardwired to fault
-    // +1 for the null entry
     char *target_env = reinterpret_cast<char*>(ram_ptr(0x100));
 
     // fix this mess...
@@ -67,4 +67,13 @@ void rv_memory::prepare_environment(int argc, char *argv[], int optind)
         optind += 1;
     }
     write(target_stack, 0x00);
+}
+
+void rv_memory::set_stack(rv_uint stack_begin)
+{
+    if (stack_begin > ram_end_) {
+        throw std::runtime_error("invalid stack location");
+    }
+    stack_begin_ = stack_begin - sizeof(rv_uint);
+    stack_end_ = stack_begin - stack_size();
 }

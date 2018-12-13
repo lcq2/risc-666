@@ -115,6 +115,13 @@ rv_uint rv_sdl::syscall_poll_event(rv_uint arg0)
         }
             break;
 
+        case SDL_MOUSEBUTTONDOWN:
+        case SDL_MOUSEBUTTONUP: {
+
+
+        }
+            break;
+
         case SDL_QUIT:
             evt->event_type = AV_event_quit;
             break;
