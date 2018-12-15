@@ -2,7 +2,6 @@
 #include <stdexcept>
 #include <cstdio>
 #include <cstdlib>
-#include <fmt/format.h>
 #include <sys/mman.h>
 #include <sys/types.h>
 #include <sys/stat.h>
