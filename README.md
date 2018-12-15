@@ -33,7 +33,7 @@ See rv_av_api.h and rv_av_api.c for more details.
 hey this is just an experiment :D
 
 ## How to use it
-# Building RISC-666
+### Building RISC-666
 To build the emulator, you should create a "build" folder under risc-666 and do an out of three build with cmake, like this:
 ```console
 [user@desktop risc-666]$ mkdir build
@@ -42,7 +42,7 @@ To build the emulator, you should create a "build" folder under risc-666 and do 
 [user@desktop build]$ make
 ```
 
-# Building DooM for RISC-V
+### Building DooM for RISC-V
 You need a RISC-V toolchain based off newlib. Ideally the one you can find here: https://github.com/riscv/riscv-gnu-toolchain.
 To build it:
 ```console
