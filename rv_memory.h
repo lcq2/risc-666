@@ -1,10 +1,17 @@
 #pragma once
 #include <cstdint>
-#include <cstring>
 #include <vector>
-#include <type_traits>
 #include "rv_global.h"
+#include "rv_bits.h"
 #include "rv_exceptions.h"
+
+constexpr auto RV_MEMORY_R = rv_bitfield<1,0,uint8_t>{};
+constexpr auto RV_MEMORY_W = rv_bitfield<1,1,uint8_t>{};
+constexpr auto RV_MEMORY_X = rv_bitfield<1,2,uint8_t>{};
+
+constexpr auto RV_MEMORY_RW = RV_MEMORY_R | RV_MEMORY_W;
+constexpr auto RV_MEMORY_RX = RV_MEMORY_R | RV_MEMORY_X;
+constexpr auto RV_MEMORY_RWX = RV_MEMORY_R | RV_MEMORY_W | RV_MEMORY_X;
 
 class rv_memory
 {
@@ -13,15 +20,27 @@ public:
     rv_memory(rv_uint ram_size);
     ~rv_memory();
 
-    void map_region(rv_uint address, const uint8_t* data, size_t len, int prot);
+    void set_region(rv_uint address, const uint8_t* data, size_t len);
+    void protect_region(rv_uint address, size_t len, uint8_t prot);
 
     rv_uint fault_address() const { return fault_address_; }
     rv_exception last_exception() const { return last_exception_; }
 
 
+    template<typename T> bool fetch(rv_uint address, T& value) const
+    {
+        if (address <= (ram_end_ - sizeof(T)) && ((mpu_[address >> 12] & RV_MEMORY_RX) == RV_MEMORY_RX))  {
+            value = *(T *)(ram_ + address);
+            return true;
+        }
+        fault_address_ = address;
+        last_exception_ = rv_exception::instruction_access_fault;
+        return false;
+    }
+
     template<typename T> bool read(rv_uint address, T& value) const
     {
-        if (address <= (ram_end_ - sizeof(T))) {
+        if (address <= (ram_end_ - sizeof(T)) && ((mpu_[address >> 12] & RV_MEMORY_R) == RV_MEMORY_R)) {
             value = *(T *)(ram_ + address);
             return true;
         }
@@ -32,7 +51,7 @@ public:
 
     template<typename T> bool write(rv_uint address, T value)
     {
-        if (address <= (ram_end_ - sizeof(T))) {
+        if (address <= (ram_end_ - sizeof(T)) && ((mpu_[address >> 12] & RV_MEMORY_W) == RV_MEMORY_W)) {
             *(T *)(ram_ + address) = value;
             return true;
         }
@@ -65,7 +84,8 @@ private:
     rv_uint stack_end_;
     rv_uint stack_pointer_;
     rv_uint brk_;
+    std::vector<uint8_t> mpu_;
 
-    mutable rv_uint fault_address_;
+    mutable rv_uint fault_address_ = 0;
     mutable rv_exception last_exception_;
 };

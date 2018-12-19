@@ -174,7 +174,7 @@ void rv_cpu::run(size_t nCycles)
             break;
 
         uint32_t insn;
-        if (unlikely(!memory_.read(pc_, insn))) {
+        if (unlikely(!memory_.fetch(pc_, insn))) {
             raise_memory_exception();
             break;
         }
@@ -839,6 +839,13 @@ void rv_cpu::handle_user_exception()
     case rv_exception::illegal_instruction:
         handle_illegal_instruction();
         break;
+
+    case rv_exception::instruction_access_fault:
+    case rv_exception::store_access_fault:
+    case rv_exception::load_access_fault:
+        handle_memory_access_fault();
+        break;
+
     default:
         break;
     }
@@ -860,12 +867,35 @@ void rv_cpu::dump_regs()
     fflush(stderr);
 }
 
+void rv_cpu::stop_emulation(int exit_code)
+{
+    emulation_exit_ = true;
+    emulation_exit_status_ = exit_code;
+}
+
 void rv_cpu::handle_illegal_instruction()
 {
     fprintf(stderr, "[e] error: illegal_instruction at %08x\n", pc_);
     dump_regs();
-    emulation_exit_ = true;
-    emulation_exit_status_ = 255;
+    stop_emulation(255);
+}
+
+void rv_cpu::handle_memory_access_fault()
+{
+    const char *exname = nullptr;
+    if (exception_code_ == rv_exception::instruction_access_fault)
+        exname = "instruction_access_fault";
+    else if(exception_code_ == rv_exception::store_access_fault)
+        exname = "store_access_fault";
+    else if(exception_code_ == rv_exception::load_access_fault)
+        exname = "load_access_fault";
+
+    if (exname == nullptr)
+        exname = "unknown";
+
+    fprintf(stderr, "[e] error: %s at %08x\n", exname, pc_);
+    dump_regs();
+    stop_emulation(255);
 }
 
 // syscall dispatching
@@ -957,8 +987,7 @@ rv_uint rv_cpu::syscall_close(rv_uint arg0)
 // void _exit(int _status)
 rv_uint rv_cpu::syscall_exit(rv_uint arg0)
 {
-    emulation_exit_ = true;
-    emulation_exit_status_ = (int)arg0;
+    stop_emulation((int)arg0);
     return 0;
 }
 

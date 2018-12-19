@@ -47,6 +47,9 @@ int main(int argc, char *argv[])
         loader.load();
         rv_memory memory(memory_size);
 
+        // first 64k are mapped RWX
+        memory.protect_region(0, 0x10000, RV_MEMORY_RWX);
+
         rv_uint last_vaddr = 0;
         rv_uint last_vsize = 0;
 
@@ -55,23 +58,38 @@ int main(int argc, char *argv[])
         for (const auto& seg : loader.segments()) {
             last_vaddr = seg.virtual_address();
             last_vsize = seg.memory_size();
-            memory.map_region(last_vaddr, loader.pointer_to<uint8_t>(seg), seg.file_size(), 0);
+            memory.set_region(last_vaddr, loader.pointer_to<uint8_t>(seg), seg.file_size());
+            memory.protect_region(last_vaddr, last_vsize, seg.protection());
         }
 
         // TODO: align to segment->alignment
-        last_vsize = last_vsize + (0x1000 - (last_vsize%0x1000));
+        if (last_vsize % 0x1000 != 0)
+            last_vsize = last_vsize + (0x1000 - (last_vsize%0x1000));
 
-        const rv_uint end_of_data = last_vaddr + last_vsize + 128;
+        rv_uint end_of_data = last_vaddr + last_vsize;
 
-        // the stack starts right after the data segment
+        // setup one guard page before the stack
+        end_of_data += 0x1000;
+
+        // setup memory protection for stack (rw)
+        memory.protect_region(end_of_data, memory.stack_size(), RV_MEMORY_RW);
+
+        // the stack starts right after the first guard page
         memory.set_stack(end_of_data + memory.stack_size());
+        end_of_data += memory.stack_size();
 
         memory.prepare_environment(argc, argv, optind);
-        memory.set_brk(end_of_data + memory.stack_size() + 128);
+
+        // setup a second guard page after the stack
+        end_of_data += 0x1000;
+
+        // finally set the program break and map all the remaining ram
+        memory.set_brk(end_of_data);
+        memory.protect_region(end_of_data, memory.ram_end() - end_of_data, RV_MEMORY_RW);
 
         rv_cpu cpu(memory);
         cpu.reset(loader.entry_point());
-
+#define PROFILEME
 #ifdef PROFILEME
         // start profiling thread
         std::thread([&cpu]() {

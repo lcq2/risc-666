@@ -11,6 +11,10 @@ rv_memory::rv_memory(rv_uint ram_size)
     ram_ = new uint8_t[ram_size]();
     ram_begin_ = 0;
     ram_end_ = ram_size;
+
+    // reserve ram_size/4096 "entries" in our mpu
+    mpu_.resize(ram_size >> 12);
+    std::fill(mpu_.begin(), mpu_.end(), 0);
 }
 
 rv_memory::~rv_memory()
@@ -18,13 +22,27 @@ rv_memory::~rv_memory()
     delete [] ram_;
 }
 
-void rv_memory::map_region(rv_uint address, const uint8_t *data, size_t len, int prot)
+void rv_memory::set_region(rv_uint address, const uint8_t *data, size_t len)
 {
-    assert(address < (ram_end_-len));
+    assert(address <= (ram_end_-len));
+    assert(data != nullptr);
 
-    // protection flag is ignored for now, proper implementation requires TLB cache
-    // otherwise it's going to be too slow
+    // fill region with provided data
     memcpy(ram_+address, data, len);
+}
+
+void rv_memory::protect_region(rv_uint address, size_t len, uint8_t prot)
+{
+    assert(address <= (ram_end_-len));
+
+    // setup protection flags for the requested range up to page boundary
+    // this will overwrite whatever flags were set previously
+    if (len % 0x1000 != 0)
+        len = len + (0x1000 - len%0x1000);
+
+    auto npages = len >> 12;
+    auto pageindex = address >> 12;
+    std::fill(mpu_.begin()+pageindex, mpu_.begin()+pageindex+npages+1, prot);
 }
 
 bool rv_memory::set_brk(rv_uint offset)

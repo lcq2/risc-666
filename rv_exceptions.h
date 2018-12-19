@@ -4,7 +4,7 @@
 enum class rv_exception: uint32_t
 {
     // interrupts
-        machine_software_interrupt = (1U << 31) | 3,
+    machine_software_interrupt = (1U << 31) | 3,
     machine_timer_interrupt = (1U << 31) | 7,
     machine_external_interrupt = (1U << 31) | 11,
     local_interrupt0 = (1U << 31) | 16,
@@ -25,7 +25,7 @@ enum class rv_exception: uint32_t
     local_interrupt15 = (1U << 31) | 31,
 
     // exceptions
-        instruction_address_misaligned = 0,
+    instruction_address_misaligned = 0,
     instruction_access_fault = 1,
     illegal_instruction = 2,
     breakpoint = 3,

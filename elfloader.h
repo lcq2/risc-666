@@ -20,6 +20,7 @@ public:
     auto file_size() const { return segment_->p_filesz; }
     auto memory_size() const { return segment_->p_memsz; }
     auto alignment() const { return segment_->p_align; }
+    uint8_t protection() const;
 
 private:
     const Elf32_Phdr* segment_ = nullptr;
