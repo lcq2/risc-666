@@ -15,51 +15,7 @@
 
 constexpr uint32_t kRiscvOpcodeMask = 0x7F;
 
-#define RV_MSTATUS_UIE_SHIFT 0
-#define RV_MSTATUS_SIE_SHIFT 1
-#define RV_MSTATUS_MIE_SHIFT 3
-#define RV_MSTATUS_UPIE_SHIFT 4
-#define RV_MSTATUS_SPIE_SHIFT 5
-#define RV_MSTATUS_MPIE_SHIFT 7
-#define RV_MSTATUS_SPP_SHIFT 8
-#define RV_MSTATUS_MPP_SHIFT 11
-
-#define RV_MSTATUS_UIE  (1 << RV_MSTATUS_UIE_SHIFT)
-#define RV_MSTATUS_SIE  (1 << RV_MSTATUS_SIE_SHIFT)
-#define RV_MSTATUS_MIE  (1 << RV_MSTATUS_MIE_SHIFT)
-#define RV_MSTATUS_UPIE (1 << RV_MSTATUS_UPIE_SHIFT)
-#define RV_MSTATUS_SPIE (1 << RV_MSTATUS_SPIE_SHIFT)
-#define RV_MSTATUS_MPIE (1 << RV_MSTATUS_MPIE_SHIFT)
-#define RV_MSTATUS_SPP  (1 << RV_MSTATUS_SPP_SHIFT)
-#define RV_MSTATUS_MPP  (3 << RV_MSTATUS_MPP_SHIFT)
-
-constexpr auto RV_MIP_USIP = rv_bitfield<1,0>{};
-constexpr auto RV_MIP_SSIP = rv_bitfield<1,1>{};
-constexpr auto RV_MIP_MSIP = rv_bitfield<1,3>{};
-constexpr auto RV_MIP_UTIP = rv_bitfield<1,4>{};
-constexpr auto RV_MIP_STIP = rv_bitfield<1,5>{};
-constexpr auto RV_MIP_MTIP = rv_bitfield<1,7>{};
-constexpr auto RV_MIP_UEIP = rv_bitfield<1,8>{};
-constexpr auto RV_MIP_SEIP = rv_bitfield<1,9>{};
-constexpr auto RV_MIP_MEIP = rv_bitfield<1,11>{};
-
-constexpr auto RV_MIE_USIE = rv_bitfield<1,0>{};
-constexpr auto RV_MIE_SSIE = rv_bitfield<1,1>{};
-constexpr auto RV_MIE_MSIE = rv_bitfield<1,3>{};
-constexpr auto RV_MIE_UTIE = rv_bitfield<1,4>{};
-constexpr auto RV_MIE_STIE = rv_bitfield<1,5>{};
-constexpr auto RV_MIE_MTIE = rv_bitfield<1,7>{};
-constexpr auto RV_MIE_UEIE = rv_bitfield<1,8>{};
-constexpr auto RV_MIE_SEIE = rv_bitfield<1,9>{};
-constexpr auto RV_MIE_MEIE = rv_bitfield<1,11>{};
-
-constexpr auto RV_MCOUNTEREN_CY = rv_bitfield<1,0>{};
-constexpr auto RV_MCOUNTEREN_TM = rv_bitfield<1,1>{};
-constexpr auto RV_MCOUNTEREN_IR = rv_bitfield<1,2>{};
-
 constexpr uint32_t RV_PRIV_U = 0;
-constexpr uint32_t RV_PRIV_S = 1;
-constexpr uint32_t RV_PRIV_M = 3;
 
 enum class rv_opcode: uint32_t
 {
@@ -102,22 +58,6 @@ enum class rv_csr: uint32_t
     mcause = 0x342,
     mtval = 0x343,
     mip = 0x344
-};
-
-inline const char *const g_regNames[] = {
-    "zero",
-    "ra",
-    "sp",
-    "gp",
-    "tp",
-    "t0",
-    "t1", "t2",
-    "s0",
-    "s1",
-    "a0", "a1",
-    "a2", "a3", "a4", "a5", "a6", "a7",
-    "s2", "s3", "s4", "s5", "s6", "s7", "s8", "s9", "s10", "s11",
-    "t3", "t4", "t5", "t6"
 };
 
 enum riscv_register
