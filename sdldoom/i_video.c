@@ -131,6 +131,7 @@ void I_GetEvent(struct av_event *evt)
     uint8_t buttonstate;
     struct av_event_keyboard *keyevt;
     struct av_event_mouse_button *btnevent;
+    struct av_event_mouse_move *movevent;
     event_t event;
     memset(&event, 0, sizeof(event_t));
 
@@ -165,28 +166,26 @@ void I_GetEvent(struct av_event *evt)
 	    event.data2 = event.data3 = 0;
 	    D_PostEvent(&event);
 	    break;
-/*
-#if (SDL_MAJOR_VERSION >= 0) && (SDL_MINOR_VERSION >= 9)
-      case SDL_MOUSEMOTION:*/
-	/* Ignore mouse warp events */
-// 	if ((Event->motion.x != screen->w/2)||(Event->motion.y != screen->h/2))
-// 	{
-// 	    /* Warp the mouse back to the center */
-// 	    if (grabMouse) {
-// 		SDL_WarpMouse(screen->w/2, screen->h/2);
-// 	    }
-// 	    event.type = ev_mouse;
-// 	    event.data1 = 0
-// 	        | (Event->motion.state & SDL_BUTTON(1) ? 1 : 0)
-// 	        | (Event->motion.state & SDL_BUTTON(2) ? 2 : 0)
-// 	        | (Event->motion.state & SDL_BUTTON(3) ? 4 : 0);
-// 	    event.data2 = Event->motion.xrel << 2;
-// 	    event.data3 = -Event->motion.yrel << 2;
-// 	    D_PostEvent(&event);
-// 	}
-// 	break;
-// #endif
-     }
+
+    case AV_event_mousemove:
+	    /* Ignore mouse warp events */
+        movevent = (struct av_event_mouse_move *)evt;
+ 	    if ((movevent->x != SCREENWIDTH/2) || (movevent->y != SCREENHEIGHT/2)) {
+ 	        /* Warp the mouse back to the center */
+ 	        if (grabMouse) {
+     		    av_warp_mouse(SCREENWIDTH/2, SCREENHEIGHT/2);
+ 	        }
+ 	        event.type = ev_mouse;
+ 	        event.data1 = 0
+ 	            | (movevent->state & AV_BUTTON(1) ? 1 : 0)
+ 	            | (movevent->state & AV_BUTTON(2) ? 2 : 0)
+ 	            | (movevent->state & AV_BUTTON(3) ? 4 : 0);
+ 	        event.data2 = movevent->xrel << 2;
+ 	        event.data3 = -movevent->yrel << 2;
+ 	        D_PostEvent(&event);
+         }
+ 	    break;
+    }
 
 }
 

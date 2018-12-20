@@ -60,6 +60,22 @@ enum class rv_csr: uint32_t
     mip = 0x344
 };
 
+inline const char *const g_regNames[] = {
+    "zero",
+    "ra",
+    "sp",
+    "gp",
+    "tp",
+    "t0",
+    "t1", "t2",
+    "s0",
+    "s1",
+    "a0", "a1",
+    "a2", "a3", "a4", "a5", "a6", "a7",
+    "s2", "s3", "s4", "s5", "s6", "s7", "s8", "s9", "s10", "s11",
+    "t3", "t4", "t5", "t6"
+};
+
 enum riscv_register
 {
     zero = 0,
@@ -799,7 +815,7 @@ void rv_cpu::dump_regs()
     fprintf(stderr, "\t");
     for (size_t i = 0; i < 32; i += 8) {
         for (size_t j = 0; j < 8; ++j) {
-            fprintf(stderr, "x%d: 0x%08x\t", i+j, regs_[i+j]);
+            fprintf(stderr, "x%d(%s): 0x%08x\t", i+j, g_regNames[i+j], regs_[i+j]);
         }
         fprintf(stderr, "\n\t");
     }
@@ -1056,6 +1072,10 @@ void rv_cpu::dispatch_syscall(rv_uint syscall_no,
 
     case SYS_av_get_mouse_state:
         retval = sdl_.syscall_get_mouse_state(arg0, arg1);
+        break;
+
+    case SYS_av_warp_mouse:
+        retval = sdl_.syscall_warp_mouse(arg0, arg1);
         break;
 
     case SYS_av_shutdown:

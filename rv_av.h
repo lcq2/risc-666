@@ -681,6 +681,7 @@ enum SYS_av_syscalls
     SYS_av_poll_event,
     SYS_av_get_ticks,
     SYS_av_get_mouse_state,
+    SYS_av_warp_mouse,
     SYS_av_shutdown
 };
 

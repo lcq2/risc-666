@@ -170,6 +170,15 @@ rv_uint rv_sdl::syscall_get_mouse_state(rv_uint arg0, rv_uint arg1)
     return (rv_uint)SDL_GetMouseState(x, y);
 }
 
+rv_uint rv_sdl::syscall_warp_mouse(rv_uint arg0, rv_uint arg1)
+{
+    if (main_window_ == nullptr)
+        return (rv_uint)-EINVAL;
+
+    SDL_WarpMouseInWindow(main_window_, (int)arg0, (int)arg1);
+    return 0;
+}
+
 rv_uint rv_sdl::syscall_shutdown()
 {
     if (main_surface_ != nullptr)
