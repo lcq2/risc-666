@@ -72,6 +72,11 @@ uint32_t av_get_ticks()
 	return syscall_errno(SYS_av_get_ticks, 0, 0, 0, 0, 0, 0);
 }
 
+uint32_t av_get_mouse_state(int *x, int *y)
+{
+  return syscall_errno(SYS_av_get_mouse_state, x, y, 0, 0, 0, 0);
+}
+
 void av_shutdown()
 {
 	syscall_errno(SYS_av_shutdown, 0, 0, 0, 0, 0, 0);

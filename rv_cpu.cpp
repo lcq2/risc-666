@@ -1114,6 +1114,10 @@ void rv_cpu::dispatch_syscall(rv_uint syscall_no,
         retval = sdl_.syscall_poll_event(arg0);
         break;
 
+    case SYS_av_get_mouse_state:
+        retval = sdl_.syscall_get_mouse_state(arg0, arg1);
+        break;
+
     case SYS_av_shutdown:
         retval = sdl_.syscall_shutdown();
         break;

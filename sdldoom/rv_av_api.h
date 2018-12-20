@@ -10,6 +10,7 @@ int av_update();
 int av_poll_event(struct av_event *evt);
 int av_set_palette(struct av_color *palette, int ncolors);
 uint32_t av_get_ticks();
+uint32_t av_get_mouse_state(int *x, int *y);
 void av_shutdown();
 
 #endif

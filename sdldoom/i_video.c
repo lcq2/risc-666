@@ -130,6 +130,7 @@ void I_GetEvent(struct av_event *evt)
 {
     uint8_t buttonstate;
     struct av_event_keyboard *keyevt;
+    struct av_event_mouse_button *btnevent;
     event_t event;
     memset(&event, 0, sizeof(event_t));
 
@@ -151,19 +152,20 @@ void I_GetEvent(struct av_event *evt)
     case AV_event_quit:
         I_Quit();
         break;
-/*
-      case SDL_MOUSEBUTTONDOWN:
-      case SDL_MOUSEBUTTONUP:
-	buttonstate = SDL_GetMouseState(NULL, NULL);
-	event.type = ev_mouse;
-	event.data1 = 0
-	    | (buttonstate & SDL_BUTTON(1) ? 1 : 0)
-	    | (buttonstate & SDL_BUTTON(2) ? 2 : 0)
-	    | (buttonstate & SDL_BUTTON(3) ? 4 : 0);
-	event.data2 = event.data3 = 0;
-	D_PostEvent(&event);
-	break;
 
+    case AV_event_mousedown:
+    case AV_event_mouseup:
+        btnevent = (struct av_event_mouse_button *)evt;
+        buttonstate = av_get_mouse_state(NULL, NULL);
+	    event.type = ev_mouse;
+	    event.data1 = 0
+	        | (buttonstate & AV_BUTTON(1) ? 1 : 0)
+	        | (buttonstate & AV_BUTTON(2) ? 2 : 0)
+	        | (buttonstate & AV_BUTTON(3) ? 4 : 0);
+	    event.data2 = event.data3 = 0;
+	    D_PostEvent(&event);
+	    break;
+/*
 #if (SDL_MAJOR_VERSION >= 0) && (SDL_MINOR_VERSION >= 9)
       case SDL_MOUSEMOTION:*/
 	/* Ignore mouse warp events */

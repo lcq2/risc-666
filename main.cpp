@@ -89,7 +89,6 @@ int main(int argc, char *argv[])
 
         rv_cpu cpu(memory);
         cpu.reset(loader.entry_point());
-#define PROFILEME
 #ifdef PROFILEME
         // start profiling thread
         std::thread([&cpu]() {
