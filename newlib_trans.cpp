@@ -71,12 +71,21 @@ void newlib_translate_stat(newlib_stat *dst, struct stat *src)
     dst->st_size = src->st_size;
     dst->st_blksize = (int)src->st_blksize;
     dst->st_blocks = src->st_blocks;
+#ifdef RISC_666_LINUX
     dst->st_atim.tv_sec = (uint32_t)src->st_atim.tv_sec;
     dst->st_atim.tv_nsec = (uint32_t)src->st_atim.tv_nsec;
     dst->st_mtim.tv_sec = (uint32_t)src->st_mtim.tv_sec;
     dst->st_mtim.tv_nsec = (uint32_t)src->st_mtim.tv_nsec;
     dst->st_ctim.tv_sec = (uint32_t)src->st_ctim.tv_sec;
     dst->st_ctim.tv_nsec = (uint32_t)src->st_ctim.tv_nsec;
+#elif RISC_666_OSX
+    dst->st_atim.tv_sec = (uint32_t)src->st_atimespec.tv_sec;
+    dst->st_atim.tv_nsec = (uint32_t)src->st_atimespec.tv_nsec;
+    dst->st_mtim.tv_sec = (uint32_t)src->st_mtimespec.tv_sec;
+    dst->st_mtim.tv_nsec = (uint32_t)src->st_mtimespec.tv_nsec;
+    dst->st_ctim.tv_sec = (uint32_t)src->st_ctimespec.tv_sec;
+    dst->st_ctim.tv_nsec = (uint32_t)src->st_ctimespec.tv_nsec;
+#endif
 }
 
 void newlib_translate_timeval(newlib_timeval *dst, struct timeval *src)

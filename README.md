@@ -59,6 +59,9 @@ Then just do:
 and DooM should start. Be sure to have SDL2 before building risc_666.
 To exit the emulation...send a SIGKILL to the process :D
 
+### OSX notes
+This has been tested on OSX 10.12.6 with brew packages. It should work with other types of package managers, but I cannot support it. Let me know if it works.
+
 ## Coming soon
 - ~~Input handling~~
 - Audio

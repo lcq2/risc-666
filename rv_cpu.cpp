@@ -5,6 +5,7 @@
 #include <sys/time.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <errno.h>
 
 #include "rv_cpu.h"
 #include "rv_exceptions.h"

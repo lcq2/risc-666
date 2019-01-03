@@ -6,7 +6,7 @@
 #include <cassert>
 #include <unordered_map>
 #include <tuple>
-#include <elf.h>
+#include "rv_elf.h"
 
 class elf_segment
 {
