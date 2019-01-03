@@ -60,8 +60,10 @@ private:
 
     void dump_regs();
 
+    void stop_emulation(int exit_code);
     void handle_user_exception();
     void handle_illegal_instruction();
+    void handle_memory_access_fault();
     void dispatch_syscall(rv_uint syscall_no,
         rv_uint arg0,
         rv_uint arg1,

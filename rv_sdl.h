@@ -18,6 +18,8 @@ public:
     rv_uint syscall_set_palette(rv_uint arg0, rv_uint arg1);
     rv_uint syscall_poll_event(rv_uint arg0);
     rv_uint syscall_get_ticks();
+    rv_uint syscall_get_mouse_state(rv_uint arg0, rv_uint arg1);
+    rv_uint syscall_warp_mouse(rv_uint arg0, rv_uint arg1);
     rv_uint syscall_shutdown();
 
 private:

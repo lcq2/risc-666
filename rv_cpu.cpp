@@ -16,51 +16,7 @@
 
 constexpr uint32_t kRiscvOpcodeMask = 0x7F;
 
-#define RV_MSTATUS_UIE_SHIFT 0
-#define RV_MSTATUS_SIE_SHIFT 1
-#define RV_MSTATUS_MIE_SHIFT 3
-#define RV_MSTATUS_UPIE_SHIFT 4
-#define RV_MSTATUS_SPIE_SHIFT 5
-#define RV_MSTATUS_MPIE_SHIFT 7
-#define RV_MSTATUS_SPP_SHIFT 8
-#define RV_MSTATUS_MPP_SHIFT 11
-
-#define RV_MSTATUS_UIE  (1 << RV_MSTATUS_UIE_SHIFT)
-#define RV_MSTATUS_SIE  (1 << RV_MSTATUS_SIE_SHIFT)
-#define RV_MSTATUS_MIE  (1 << RV_MSTATUS_MIE_SHIFT)
-#define RV_MSTATUS_UPIE (1 << RV_MSTATUS_UPIE_SHIFT)
-#define RV_MSTATUS_SPIE (1 << RV_MSTATUS_SPIE_SHIFT)
-#define RV_MSTATUS_MPIE (1 << RV_MSTATUS_MPIE_SHIFT)
-#define RV_MSTATUS_SPP  (1 << RV_MSTATUS_SPP_SHIFT)
-#define RV_MSTATUS_MPP  (3 << RV_MSTATUS_MPP_SHIFT)
-
-constexpr auto RV_MIP_USIP = rv_bitfield<1,0>{};
-constexpr auto RV_MIP_SSIP = rv_bitfield<1,1>{};
-constexpr auto RV_MIP_MSIP = rv_bitfield<1,3>{};
-constexpr auto RV_MIP_UTIP = rv_bitfield<1,4>{};
-constexpr auto RV_MIP_STIP = rv_bitfield<1,5>{};
-constexpr auto RV_MIP_MTIP = rv_bitfield<1,7>{};
-constexpr auto RV_MIP_UEIP = rv_bitfield<1,8>{};
-constexpr auto RV_MIP_SEIP = rv_bitfield<1,9>{};
-constexpr auto RV_MIP_MEIP = rv_bitfield<1,11>{};
-
-constexpr auto RV_MIE_USIE = rv_bitfield<1,0>{};
-constexpr auto RV_MIE_SSIE = rv_bitfield<1,1>{};
-constexpr auto RV_MIE_MSIE = rv_bitfield<1,3>{};
-constexpr auto RV_MIE_UTIE = rv_bitfield<1,4>{};
-constexpr auto RV_MIE_STIE = rv_bitfield<1,5>{};
-constexpr auto RV_MIE_MTIE = rv_bitfield<1,7>{};
-constexpr auto RV_MIE_UEIE = rv_bitfield<1,8>{};
-constexpr auto RV_MIE_SEIE = rv_bitfield<1,9>{};
-constexpr auto RV_MIE_MEIE = rv_bitfield<1,11>{};
-
-constexpr auto RV_MCOUNTEREN_CY = rv_bitfield<1,0>{};
-constexpr auto RV_MCOUNTEREN_TM = rv_bitfield<1,1>{};
-constexpr auto RV_MCOUNTEREN_IR = rv_bitfield<1,2>{};
-
 constexpr uint32_t RV_PRIV_U = 0;
-constexpr uint32_t RV_PRIV_S = 1;
-constexpr uint32_t RV_PRIV_M = 3;
 
 enum class rv_opcode: uint32_t
 {
@@ -175,7 +131,7 @@ void rv_cpu::run(size_t nCycles)
             break;
 
         uint32_t insn;
-        if (unlikely(!memory_.read(pc_, insn))) {
+        if (unlikely(!memory_.fetch(pc_, insn))) {
             raise_memory_exception();
             break;
         }
@@ -840,6 +796,13 @@ void rv_cpu::handle_user_exception()
     case rv_exception::illegal_instruction:
         handle_illegal_instruction();
         break;
+
+    case rv_exception::instruction_access_fault:
+    case rv_exception::store_access_fault:
+    case rv_exception::load_access_fault:
+        handle_memory_access_fault();
+        break;
+
     default:
         break;
     }
@@ -853,7 +816,7 @@ void rv_cpu::dump_regs()
     fprintf(stderr, "\t");
     for (size_t i = 0; i < 32; i += 8) {
         for (size_t j = 0; j < 8; ++j) {
-            fprintf(stderr, "x%d: 0x%08x\t", i+j, regs_[i+j]);
+            fprintf(stderr, "x%d(%s): 0x%08x\t", i+j, g_regNames[i+j], regs_[i+j]);
         }
         fprintf(stderr, "\n\t");
     }
@@ -861,12 +824,35 @@ void rv_cpu::dump_regs()
     fflush(stderr);
 }
 
+void rv_cpu::stop_emulation(int exit_code)
+{
+    emulation_exit_ = true;
+    emulation_exit_status_ = exit_code;
+}
+
 void rv_cpu::handle_illegal_instruction()
 {
     fprintf(stderr, "[e] error: illegal_instruction at %08x\n", pc_);
     dump_regs();
-    emulation_exit_ = true;
-    emulation_exit_status_ = 255;
+    stop_emulation(255);
+}
+
+void rv_cpu::handle_memory_access_fault()
+{
+    const char *exname = nullptr;
+    if (exception_code_ == rv_exception::instruction_access_fault)
+        exname = "instruction_access_fault";
+    else if(exception_code_ == rv_exception::store_access_fault)
+        exname = "store_access_fault";
+    else if(exception_code_ == rv_exception::load_access_fault)
+        exname = "load_access_fault";
+
+    if (exname == nullptr)
+        exname = "unknown";
+
+    fprintf(stderr, "[e] error: %s at %08x\n", exname, pc_);
+    dump_regs();
+    stop_emulation(255);
 }
 
 // syscall dispatching
@@ -958,8 +944,7 @@ rv_uint rv_cpu::syscall_close(rv_uint arg0)
 // void _exit(int _status)
 rv_uint rv_cpu::syscall_exit(rv_uint arg0)
 {
-    emulation_exit_ = true;
-    emulation_exit_status_ = (int)arg0;
+    stop_emulation((int)arg0);
     return 0;
 }
 
@@ -1084,6 +1069,14 @@ void rv_cpu::dispatch_syscall(rv_uint syscall_no,
 
     case SYS_av_poll_event:
         retval = sdl_.syscall_poll_event(arg0);
+        break;
+
+    case SYS_av_get_mouse_state:
+        retval = sdl_.syscall_get_mouse_state(arg0, arg1);
+        break;
+
+    case SYS_av_warp_mouse:
+        retval = sdl_.syscall_warp_mouse(arg0, arg1);
         break;
 
     case SYS_av_shutdown:

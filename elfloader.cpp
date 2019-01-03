@@ -1,4 +1,3 @@
-#include "elfloader.h"
 #include <stdexcept>
 #include <cstdio>
 #include <cstdlib>
@@ -7,14 +6,36 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <fcntl.h>
-#include <functional>
+#include "elfloader.h"
+#include "memory.h"
+#include "rv_memory.h"
 
 #define ELF_RISCV_MACHINE 243
+
 
 template<typename T>
 auto offset_ptr(const void *data, size_t offset = 0)
 {
     return reinterpret_cast<const T*>(reinterpret_cast<const uint8_t*>(data)+offset);
+}
+
+uint8_t elf_segment::protection() const
+{
+    uint8_t prot_flags = 0;
+
+    if ((segment_->p_flags & PF_R) == PF_R) {
+        prot_flags |= RV_MEMORY_R;
+    }
+
+    if ((segment_->p_flags & PF_W) == PF_W) {
+        prot_flags |= RV_MEMORY_W;
+    }
+
+    if ((segment_->p_flags & PF_X) == PF_X) {
+        prot_flags |= RV_MEMORY_X;
+    }
+
+    return prot_flags;
 }
 
 bool elf_loader::check_magic(const Elf32_Ehdr *hdr) const

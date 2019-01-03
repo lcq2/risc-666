@@ -656,6 +656,11 @@ enum
 
 #define AV_EVENT_BUF_SIZE 128
 
+#define AV_RELEASED 0
+#define AV_PRESSED 1
+
+#define AV_BUTTON(X)       (1 << ((X)-1))
+
 enum AV_event_type
 {
     AV_event_keydown = 0,
@@ -675,6 +680,8 @@ enum SYS_av_syscalls
     SYS_av_delay,
     SYS_av_poll_event,
     SYS_av_get_ticks,
+    SYS_av_get_mouse_state,
+    SYS_av_warp_mouse,
     SYS_av_shutdown
 };
 
@@ -704,9 +711,25 @@ struct av_event_keyboard
     struct av_key key;
 } __attribute__((packed));
 
-struct av_event_mouse
+struct av_event_mouse_button
 {
     struct av_event hdr;
-};
+    uint8_t button;
+    uint8_t state;
+    uint8_t clicks;
+    uint8_t padding;
+    int32_t x;
+    int32_t y;
+} __attribute__((packed));
+
+struct av_event_mouse_move
+{
+    struct av_event hdr;
+    uint32_t state;
+    int32_t x;
+    int32_t y;
+    int32_t xrel;
+    int32_t yrel;
+} __attribute__((packed));
 
 #endif

@@ -117,11 +117,30 @@ rv_uint rv_sdl::syscall_poll_event(rv_uint arg0)
 
         case SDL_MOUSEBUTTONDOWN:
         case SDL_MOUSEBUTTONUP: {
-
+            av_event_mouse_button *btnevent = reinterpret_cast<av_event_mouse_button *>(evt);
+            if (event.type == SDL_MOUSEBUTTONUP)
+                btnevent->hdr.event_type = AV_event_mouseup;
+            else if (event.type == SDL_MOUSEBUTTONDOWN)
+                btnevent->hdr.event_type = AV_event_mousedown;
+            btnevent->clicks = event.button.clicks;
+            btnevent->state = event.button.state;
+            btnevent->button = event.button.button;
+            btnevent->x = event.button.x;
+            btnevent->y = event.button.y;
 
         }
             break;
 
+        case SDL_MOUSEMOTION: {
+            av_event_mouse_move *movevent = reinterpret_cast<av_event_mouse_move *>(evt);
+            movevent->hdr.event_type = AV_event_mousemove;
+            movevent->state = event.motion.state;
+            movevent->x = event.motion.x;
+            movevent->y = event.motion.y;
+            movevent->xrel = event.motion.xrel;
+            movevent->yrel = event.motion.yrel;
+        }
+            break;
         case SDL_QUIT:
             evt->event_type = AV_event_quit;
             break;
@@ -141,6 +160,23 @@ rv_uint rv_sdl::syscall_delay(rv_uint arg0)
 rv_uint rv_sdl::syscall_get_ticks()
 {
     return (rv_uint)SDL_GetTicks();
+}
+
+rv_uint rv_sdl::syscall_get_mouse_state(rv_uint arg0, rv_uint arg1)
+{
+    int *x = arg0 != 0 ? (int *)memory_.ram_ptr(arg0) : nullptr;
+    int *y = arg1 != 0 ? (int *)memory_.ram_ptr(arg1) : nullptr;
+
+    return (rv_uint)SDL_GetMouseState(x, y);
+}
+
+rv_uint rv_sdl::syscall_warp_mouse(rv_uint arg0, rv_uint arg1)
+{
+    if (main_window_ == nullptr)
+        return (rv_uint)-EINVAL;
+
+    SDL_WarpMouseInWindow(main_window_, (int)arg0, (int)arg1);
+    return 0;
 }
 
 rv_uint rv_sdl::syscall_shutdown()
