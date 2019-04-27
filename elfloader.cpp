@@ -7,7 +7,6 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include "elfloader.h"
-#include "memory.h"
 #include "rv_memory.h"
 
 #define ELF_RISCV_MACHINE 243

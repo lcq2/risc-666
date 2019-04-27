@@ -802,7 +802,11 @@ void rv_cpu::handle_user_exception()
     case rv_exception::load_access_fault:
         handle_memory_access_fault();
         break;
-
+/** DEBUG support, WIP
+    case rv_exception::breakpoint:
+        handle_breakpoint_exception();
+        break;
+        */
     default:
         break;
     }

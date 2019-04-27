@@ -39,6 +39,7 @@ private:
 
     void raise_illegal_instruction() { raise_exception(rv_exception::illegal_instruction); }
     void raise_memory_exception() { raise_exception(memory_.last_exception()); }
+    void raise_breakpoint_exception() { raise_exception(rv_exception::breakpoint); }
 
     inline void execute_lui(uint32_t insn);
     inline void execute_auipc(uint32_t insn);
@@ -64,6 +65,7 @@ private:
     void handle_user_exception();
     void handle_illegal_instruction();
     void handle_memory_access_fault();
+    void handle_breakpoint_exception();
     void dispatch_syscall(rv_uint syscall_no,
         rv_uint arg0,
         rv_uint arg1,
